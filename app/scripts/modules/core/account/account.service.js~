@@ -18,7 +18,7 @@ module.exports = angular.module('spinnaker.core.account.service', [
 	console.log('-------------------------------' + providerName + ':' + accountName + ':' + regionName + '------------');
 	if (providerName === 'azure') {
 		return [regionName];
-	}
+	};
       return getPreferredZonesByAccount(providerName).then( function(defaults) {
         if (defaults[accountName] && defaults[accountName][regionName]) {
           return {preferredZones: defaults[accountName][regionName]};

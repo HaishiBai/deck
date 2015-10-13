@@ -17,13 +17,13 @@ window.spinnakerSettings = {
   providers: {
     azure: {
       defaults: {
-        account: 'test',
+        account: 'azure_client_id',
         region: 'usw'
       },
-      primaryAccounts: ['test'],
+      primaryAccounts: ['azure_client_id'],
       primaryRegions: ['usw', 'use', 'euw', 'eue'],
       preferredZonesByAccount: {
-	test: {
+	azure_client_id: {
            'usw': ['usw'],
            'use': ['use'],
            'euw': ['euw'],
