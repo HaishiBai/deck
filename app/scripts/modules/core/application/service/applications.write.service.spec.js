@@ -29,7 +29,8 @@ describe('Servcie: applicationWriter', function () {
           email: 'foo@netflix.com',
           owner: 'jojo',
           type: 'test',
-          pdApiKey: '229293'
+          pdApiKey: '229293',
+          cloudProviders: [],
       };
 
       applicationWriter.updateApplication(application);
@@ -48,13 +49,35 @@ describe('Servcie: applicationWriter', function () {
         email: 'foo@netflix.com',
         owner: 'jojo',
         type: 'test',
-        pdApiKey: '229293'
+        pdApiKey: '229293',
+        cloudProviders: [],
       };
 
       applicationWriter.updateApplication(application);
 
       expect(taskExecutor.executeTask).toHaveBeenCalled();
       expect(taskExecutor.executeTask.calls.count()).toEqual(2);
+    });
+
+    it('should join cloud providers into a single string', function () {
+      var job;
+      spyOn(taskExecutor, 'executeTask').and.callFake((task) => job = task.job[0]);
+
+      var application = {
+        name: 'foo',
+        accounts: 'test',
+        description: 'foo description',
+        email: 'foo@netflix.com',
+        owner: 'jojo',
+        type: 'test',
+        pdApiKey: '229293',
+        cloudProviders: ['titan', 'cf'],
+      };
+
+      applicationWriter.updateApplication(application);
+
+      expect(job.application.cloudProviders).toBe('titan,cf');
+
     });
   });
 

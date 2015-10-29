@@ -4,11 +4,12 @@ let angular = require('angular');
 
 module.exports = angular.module('spinnaker.core.account.service', [
   require('exports?"restangular"!imports?_=lodash!restangular'),
-  require('../../utils/lodash.js'),
+  require('../utils/lodash.js'),
   require('../cache/infrastructureCaches.js'),
-  require('../../config/settings.js'),
+  require('../config/settings.js'),
+  require('../cloudProvider/cloudProvider.registry.js'),
 ])
-  .factory('accountService', function(settings, _, Restangular, $q, infrastructureCaches) {
+  .factory('accountService', function(settings, _, Restangular, $q, infrastructureCaches, cloudProviderRegistry) {
 
     function getPreferredZonesByAccount(providerName='aws') {
       return $q.when(settings.providers[providerName].preferredZonesByAccount);
@@ -50,13 +51,23 @@ module.exports = angular.module('spinnaker.core.account.service', [
       }
       return Restangular
         .all('credentials')
-        .withHttpConfig({cache: infrastructureCaches.credentials})
+        .withHttpConfig({cache: true})
         .getList();
     }
 
-    function listProviders() {
+    function listProviders(application) {
       return listAccounts().then(function(accounts) {
-        return _.uniq(_.pluck(accounts, 'type'));
+        let allProviders = _.uniq(_.pluck(accounts, 'type'));
+        let availableRegisteredProviders = _.intersection(allProviders, cloudProviderRegistry.listRegisteredProviders());
+        if (application) {
+          let appProviders = application.attributes.cloudProviders ?
+            application.attributes.cloudProviders.split(',') :
+            settings.defaultProviders ?
+              settings.defaultProviders :
+              availableRegisteredProviders;
+          return _.intersection(availableRegisteredProviders, appProviders);
+        }
+        return availableRegisteredProviders;
       });
     }
 
@@ -67,7 +78,7 @@ module.exports = angular.module('spinnaker.core.account.service', [
           acc[account.name] = Restangular
             .all('credentials')
             .one(account.name)
-            .withHttpConfig({cache: infrastructureCaches.credentials})
+            .withHttpConfig({cache: true})
             .get();
           return acc;
         }, {})).then(function(result) {
@@ -79,7 +90,7 @@ module.exports = angular.module('spinnaker.core.account.service', [
 
     function getAccountDetails(accountName) {
       return Restangular.one('credentials', accountName)
-        .withHttpConfig({cache: infrastructureCaches.credentials})
+        .withHttpConfig({cache: true})
         .get();
     }
 

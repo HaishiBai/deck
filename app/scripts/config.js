@@ -15,11 +15,11 @@ module.exports = angular
     uiSelectConfig.theme = 'select2';
     uiSelectConfig.appendToBody = true;
   })
-  .config(function($tooltipProvider) {
-    $tooltipProvider.options({
+  .config(function($uibTooltipProvider) {
+    $uibTooltipProvider.options({
       appendToBody: true
     });
-    $tooltipProvider.setTriggers({
+    $uibTooltipProvider.setTriggers({
       'mouseenter focus': 'mouseleave blur'
     });
   })
@@ -41,5 +41,5 @@ module.exports = angular
   .config(function($animateProvider) {
     $animateProvider.classNameFilter(/animated/);
   })
-  .config(require('./modules/core/uiSelect.decorator.js'))
+  .config(require('./modules/core/forms/uiSelect.decorator.js'))
   .name;

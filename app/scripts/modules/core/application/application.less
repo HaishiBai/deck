@@ -26,6 +26,13 @@
     display: inline-block;
   }
   h2 {
+    @media (min-width: 708px) and (max-width: 992px) {
+      float: left;
+      font-size: 160%;
+      min-width: 120px;
+      margin-right: 30px;
+      margin-top: 15px;
+    }
     min-width: 200px;
     margin-right: 50px;
     a {
@@ -37,6 +44,13 @@
     display: inline-block;
   }
   ul {
+    @media (min-width: 708px) and (max-width: 992px) {
+      display: block;
+      li {
+        margin-top: 10px;
+        font-size: 85%;
+      }
+    }
     display: inline-block;
     vertical-align: bottom;
     text-transform: uppercase;
@@ -186,10 +200,16 @@
 }
 
 .glyphicon-refresh {
-  &.refresh-enabled {
-    color: @healthy_green_icon;
-  }
   &.refresh-disabled {
     opacity: 0.5;
+  }
+  &.refresh-young {
+    color: @healthy_green_icon;
+  }
+  &.refresh-old {
+    color: #CEB717;
+  }
+  &.refresh-ancient {
+    color: @unhealthy_red;
   }
 }

@@ -2,18 +2,33 @@
 
 let angular = require('angular');
 
+require('./newapplication.less');
+require('./application.less');
+
 module.exports = angular.module('spinnaker.application.controller', [
   require('exports?"cfp.hotkeys"!angular-hotkeys'),
   require('angular-ui-router'),
   require('../history/recentHistory.service.js'),
 ])
-  .controller('ApplicationCtrl', function($scope, $state, hotkeys, app, recentHistoryService) {
+  .controller('ApplicationCtrl', function($scope, $state, hotkeys, app, recentHistoryService, $window) {
+    $scope.$window = $window;
     $scope.application = app;
     $scope.insightTarget = app;
+    $scope.refreshTooltipTemplate = require('./applicationRefresh.tooltip.html');
     if (app.notFound) {
       recentHistoryService.removeLastItem('applications');
       return;
     }
+
+    $scope.getAgeColor = () => {
+      const yellowAge = 2 * 60 * 1000; // 2 minutes
+      const redAge = 5 * 60 * 1000; // 5 minutes
+      let lastRefresh = app.lastRefresh || 0;
+      let age = new Date().getTime() - lastRefresh;
+
+      return age < yellowAge ? 'young' :
+             age < redAge ? 'old' : 'ancient';
+    };
 
     var hotkeyBind = hotkeys.bindTo($scope);
     var applicationHotkeys = [

@@ -6,11 +6,11 @@ module.exports = angular.module('spinnaker.gce.serverGroupCommandBuilder.service
   require('exports?"restangular"!imports?_=lodash!restangular'),
   require('../../../core/cache/deckCacheFactory.js'),
   require('../../../core/account/account.service.js'),
-  require('../../../instance/instanceTypeService.js'),
+  require('../../../core/instance/instanceTypeService.js'),
   require('../../../core/naming/naming.service.js'),
-  require('../../../utils/lodash.js'),
+  require('../../../core/utils/lodash.js'),
 ])
-  .factory('gceServerGroupCommandBuilder', function (settings, Restangular, $exceptionHandler, $q,
+  .factory('gceServerGroupCommandBuilder', function (settings, Restangular, $q,
                                                      accountService, instanceTypeService, namingService, _) {
 
     // Two assumptions here:
@@ -128,6 +128,10 @@ module.exports = angular.module('spinnaker.gce.serverGroupCommandBuilder.service
         }
       };
 
+      if (application && application.attributes && application.attributes.platformHealthOnly) {
+        command.interestingHealthProviderNames = ['Google'];
+      }
+
       attemptToSetValidCredentials(application, defaultCredentials, command);
 
       return $q.when(command);
@@ -185,6 +189,10 @@ module.exports = angular.module('spinnaker.gce.serverGroupCommandBuilder.service
           mode: mode,
         },
       };
+
+      if (application && application.attributes && application.attributes.platformHealthOnly) {
+        command.interestingHealthProviderNames = ['Google'];
+      }
 
       if (serverGroup.launchConfig) {
         angular.extend(command, {

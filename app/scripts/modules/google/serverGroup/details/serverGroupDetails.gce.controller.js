@@ -6,18 +6,19 @@ let angular = require('angular');
 module.exports = angular.module('spinnaker.serverGroup.details.gce.controller', [
   require('angular-ui-router'),
   require('../configure/ServerGroupCommandBuilder.js'),
-  require('../../../serverGroups/serverGroup.read.service.js'),
-  require('../../../confirmationModal/confirmationModal.service.js'),
-  require('../../../serverGroups/serverGroup.write.service.js'),
-  require('../../../serverGroups/configure/common/runningExecutions.service.js'),
-  require('../../../utils/lodash.js'),
-  require('../../../insight/insightFilterState.model.js'),
+  require('../../../core/application/modal/platformHealthOverride.directive.js'),
+  require('../../../core/serverGroup/serverGroup.read.service.js'),
+  require('../../../core/confirmationModal/confirmationModal.service.js'),
+  require('../../../core/serverGroup/serverGroup.write.service.js'),
+  require('../../../core/serverGroup/configure/common/runningExecutions.service.js'),
+  require('../../../core/utils/lodash.js'),
+  require('../../../core/insight/insightFilterState.model.js'),
   require('./resize/resizeServerGroup.controller'),
-  require('../../../utils/selectOnDblClick.directive.js'),
+  require('../../../core/utils/selectOnDblClick.directive.js'),
 ])
-  .controller('gceServerGroupDetailsCtrl', function ($scope, $state, $templateCache, $compile, app, serverGroup, InsightFilterStateModel,
-                                                     gceServerGroupCommandBuilder, serverGroupReader, $modal, confirmationModalService, _, serverGroupWriter,
-                                                     executionFilterService) {
+  .controller('gceServerGroupDetailsCtrl', function ($scope, $state, $templateCache, $interpolate, app, serverGroup, InsightFilterStateModel,
+                                                     gceServerGroupCommandBuilder, serverGroupReader, $uibModal, confirmationModalService, _, serverGroupWriter,
+                                                     runningExecutionsService) {
 
     let application = app;
 
@@ -56,7 +57,7 @@ module.exports = angular.module('spinnaker.serverGroup.details.gce.controller', 
 
         $scope.serverGroup = restangularlessDetails;
         $scope.runningExecutions = function() {
-          return executionFilterService.filterRunningExecutions($scope.serverGroup.executions);
+          return runningExecutionsService.filterRunningExecutions($scope.serverGroup.executions);
         };
 
         if (!_.isEmpty($scope.serverGroup)) {
@@ -71,14 +72,45 @@ module.exports = angular.module('spinnaker.serverGroup.details.gce.controller', 
           var projectId = pathSegments[pathSegments.indexOf('projects') + 1];
           $scope.serverGroup.logsLink =
             'https://console.developers.google.com/project/' + projectId + '/logs?service=compute.googleapis.com&minLogLevel=0&filters=text:' + $scope.serverGroup.name;
+
+          augmentTagsWithHelp();
         } else {
-          $state.go('^');
+          autoClose();
         }
-      });
+      },
+        autoClose
+      );
+    }
+
+    function autoClose() {
+      if ($scope.$$destroyed) {
+        return;
+      }
+      $state.params.allowModalToStayOpen = true;
+      $state.go('^', null, {location: 'replace'});
     }
 
     function cancelLoader() {
       $scope.state.loading = false;
+    }
+
+    function augmentTagsWithHelp() {
+      if (_.has($scope.serverGroup, 'launchConfig.instanceTemplate.properties.tags.items') && $scope.securityGroups) {
+        let helpMap = {};
+
+        $scope.serverGroup.launchConfig.instanceTemplate.properties.tags.items.forEach(tag => {
+          let securityGroupsMatches = _.filter($scope.securityGroups, securityGroup => _.includes(securityGroup.targetTags, tag));
+          let securityGroupMatchNames = _.pluck(securityGroupsMatches, 'name');
+
+          if (!_.isEmpty(securityGroupMatchNames)) {
+            let groupOrGroups = securityGroupMatchNames.length > 1 ? 'groups' : 'group';
+
+            helpMap[tag] = 'This tag associates this server group with security ' + groupOrGroups + ' <em>' + securityGroupMatchNames.join(', ') + '</em>.';
+          }
+        });
+
+        $scope.serverGroup.launchConfig.instanceTemplate.properties.tags.helpMap = helpMap;
+      }
     }
 
     retrieveServerGroup().then(() => application.registerAutoRefreshHandler(retrieveServerGroup, $scope));
@@ -133,9 +165,8 @@ module.exports = angular.module('spinnaker.serverGroup.details.gce.controller', 
 
     this.getBodyTemplate = function(serverGroup, application) {
       if(this.isLastServerGroupInRegion(serverGroup, application)){
-        var template = $templateCache.get(require('../../../serverGroups/details/deleteLastServerGroupWarning.html'));
-        $scope.deletingServerGroup = serverGroup;
-        return $compile(template)($scope);
+        var template = $templateCache.get(require('../../../core/serverGroup/details/deleteLastServerGroupWarning.html'));
+        return $interpolate(template)({deletingServerGroup: serverGroup});
       }
     };
 
@@ -156,25 +187,33 @@ module.exports = angular.module('spinnaker.serverGroup.details.gce.controller', 
         title: 'Disabling ' + serverGroup.name
       };
 
-      var submitMethod = function () {
+      var submitMethod = function(interestingHealthProviderNames) {
         return serverGroupWriter.disableServerGroup(serverGroup, application, {
           cloudProvider: 'gce',
           serverGroupName: serverGroup.name,
           region: serverGroup.region,
           zone: serverGroup.zones[0],
+          interestingHealthProviderNames: interestingHealthProviderNames,
         });
       };
 
-      confirmationModalService.confirm({
+      var confirmationModalParams = {
         header: 'Really disable ' + serverGroup.name + '?',
         buttonText: 'Disable ' + serverGroup.name,
         destructive: true,
         provider: 'gce',
         account: serverGroup.account,
         taskMonitorConfig: taskMonitor,
-        submitMethod: submitMethod
-      });
+        platformHealthOnlyShowOverride: application.attributes.platformHealthOnlyShowOverride,
+        platformHealthType: 'Google',
+        submitMethod: submitMethod,
+      };
 
+      if (application.attributes.platformHealthOnly) {
+        confirmationModalParams.interestingHealthProviderNames = ['Google'];
+      }
+
+      confirmationModalService.confirm(confirmationModalParams);
     };
 
     this.enableServerGroup = function enableServerGroup() {
@@ -186,28 +225,36 @@ module.exports = angular.module('spinnaker.serverGroup.details.gce.controller', 
         forceRefreshMessage: 'Refreshing application...',
       };
 
-      var submitMethod = function () {
+      var submitMethod = function(interestingHealthProviderNames) {
         return serverGroupWriter.enableServerGroup(serverGroup, application, {
           cloudProvider: 'gce',
           serverGroupName: serverGroup.name,
           region: serverGroup.region,
           zone: serverGroup.zones[0],
+          interestingHealthProviderNames: interestingHealthProviderNames,
         });
       };
 
-      confirmationModalService.confirm({
+      var confirmationModalParams = {
         header: 'Really enable ' + serverGroup.name + '?',
         buttonText: 'Enable ' + serverGroup.name,
         destructive: false,
         account: serverGroup.account,
         taskMonitorConfig: taskMonitor,
-        submitMethod: submitMethod
-      });
+        platformHealthOnlyShowOverride: application.attributes.platformHealthOnlyShowOverride,
+        platformHealthType: 'Google',
+        submitMethod: submitMethod,
+      };
 
+      if (application.attributes.platformHealthOnly) {
+        confirmationModalParams.interestingHealthProviderNames = ['Google'];
+      }
+
+      confirmationModalService.confirm(confirmationModalParams);
     };
 
     this.resizeServerGroup = function resizeServerGroup() {
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('./resize/resizeServerGroup.html'),
         controller: 'gceResizeServerGroupCtrl as ctrl',
         resolve: {
@@ -218,7 +265,7 @@ module.exports = angular.module('spinnaker.serverGroup.details.gce.controller', 
     };
 
     this.cloneServerGroup = function cloneServerGroup(serverGroup) {
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('../configure/wizard/serverGroupWizard.html'),
         controller: 'gceCloneServerGroupCtrl as ctrl',
         resolve: {
@@ -232,8 +279,8 @@ module.exports = angular.module('spinnaker.serverGroup.details.gce.controller', 
 
     this.showUserData = function showScalingActivities() {
       $scope.userData = window.atob($scope.serverGroup.launchConfig.userData);
-      $modal.open({
-        templateUrl: require('../../../serverGroups/details/userData.html'),
+      $uibModal.open({
+        templateUrl: require('../../../core/serverGroup/details/userData.html'),
         controller: 'CloseableModalCtrl',
         scope: $scope
       });

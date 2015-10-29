@@ -4,6 +4,10 @@ let angular = require('angular');
 
 module.exports = angular.module('spinnaker.core.help.contents', [])
   .constant('helpContents', {
+    'application.platformHealthOnly': 'When this option is enabled, instance status as reported by the cloud provider will be considered sufficient to ' +
+      'determine task completion. When this option is disabled, tasks will normally need health status reported by some other health provider (e.g. a ' +
+      'load balancer or discovery service) to determine task completion.',
+    'application.showPlatformHealthOverride': 'When this option is enabled, users will be able to toggle the option above on a task-by-task basis.',
     'aws.associateElasticIp.elasticIp': '<p>(Optional) <b>Elastic IP</b> is an IP address that Spinnaker will associate with this cluster.' +
       '<p>If specified, this elastic IP must exist and not already be attached to an instance or cluster.</p>' +
       '<p>If left blank, Spinnaker will make a selection from the list of available elastic IPs in the provided account and region.</p>',
@@ -78,7 +82,15 @@ module.exports = angular.module('spinnaker.core.help.contents', [])
       '</ul>' +
       '<p>You can search for multiple words or word fragments. For instance, to find all security groups in a prod stack with "canary" in the details' +
       ', enter <samp>prod canary</samp>.</p>',
-
+    'executions.search': 'Quickly filter the displayed executions by the following fields:' +
+      '<ul>' +
+      '<li>Name</li>' +
+      '<li>Trigger</li>' +
+      '<li>Context - server groups, bakery results, etc.</li>' +
+      '</ul>',
+    'gce.instance.customMetadata.instance-template': 'The instance template used to configure this instance.',
+    'gce.instance.customMetadata.load-balancer-names': 'This field is used to "remember" what load balancers this instance is associated with, even if it is deregistered.',
+    'gce.instance.customMetadata.startup-script': 'This script will run automatically on every boot.',
     'gce.instanceType.32core': '<p>32-core machine types are in Beta and are available only in Ivy Bridge and Haswell zones. Attempting to provision a 32-core machine in an unsupported zone will result in a <b>machine type not found</b> error message.</p>',
     'gce.loadBalancer.advancedSettings.healthInterval': '<p>Configures the interval, in seconds, between load balancer health checks.</p><p>Default: <b>10</b></p>',
     'gce.loadBalancer.advancedSettings.healthyThreshold': '<p>Configures the number of healthy observations before reinstituting an instance into the load balancer’s traffic rotation.</p><p>Default: <b>10</b></p>',
@@ -86,7 +98,12 @@ module.exports = angular.module('spinnaker.core.help.contents', [])
     'gce.loadBalancer.healthCheck': '(Optional) <b>Health Checks</b> use HTTP requests to determine if a VM instance is healthy.',
     'gce.loadBalancer.portRange': '(Optional) Only packets addressed to ports in the specified <b>Port Range</b> will be forwarded. If left empty, all ports are forwarded. Must be a single port number or two port numbers separated by a dash. Each port number must be between 1 and 65535, inclusive. For example: 5000-5999.',
     'gce.serverGroup.capacity': 'The number of instances that the instance group manager will attempt to maintain. Deleting or abandoning instances will affect this number, as will resizing the group.',
+    'gce.serverGroup.customMetadata.load-balancer-names': 'This field is used to "remember" what load balancers this server group is associated with, even if the instances are deregistered.',
+    'gce.serverGroup.customMetadata.startup-script': 'This script will run automatically on every boot.',
     'gce.serverGroup.securityGroups.implicit': 'Firewall rules with no target tags defined will permit incoming connections that match the ingress rules to all instances in the network.',
+    'pipeline.config.checkPreconditions.failPipeline': '' +
+      '<p><strong>Checked</strong> - the overall pipeline will fail whenever this precondition is false.</p>' +
+      '<p><strong>Unchecked</strong> - the overall pipeline will continue executing but this particular branch will stop.</p>',
     'pipeline.config.deploy.template': '<p>Select an existing cluster to use as a template for this deployment, and we\'ll pre-fill ' +
       'the configuration based on the newest server group in the cluster.</p>' +
       '<p>If you want to start from scratch, select "None".</p>' +
@@ -114,7 +131,9 @@ module.exports = angular.module('spinnaker.core.help.contents', [])
     'pipeline.config.bake.enhancedNetworking': '<p>(Optional) Enable enhanced networking (sr-iov) support for image (requires hvm and trusty base_os).</p>',
     'pipeline.config.bake.amiName': '<p>(Optional) Default = $package-$arch-$ami_suffix-$store_type</p>',
     'pipeline.config.manualJudgment.instructions': '<p>(Optional) Instructions are shown to the user when making a manual judgment.</p><p>May contain HTML.</p>',
-
+    'pipeline.config.manualJudgment.failPipeline': '' +
+      '<p><strong>Checked</strong> - the overall pipeline will fail whenever the manual judgment is negative.</p>' +
+      '<p><strong>Unchecked</strong> - the overall pipeline will continue executing but this particular branch will stop.</p>',
     'pipeline.config.canary.clusterPairs': '' +
       '<p>A <em>cluster pair</em> is used to create a baseline and canary cluster.</p>' +
       '<p>The version currently deployed in the baseline cluster will be used to create a new baseline server group, while the version created in the previous bake or Find AMI stage will be deployed into the canary.</p>',
@@ -139,11 +158,7 @@ module.exports = angular.module('spinnaker.core.help.contents', [])
     'pipeline.config.cron.expression': '<strong>Format (Year is optional)</strong><p><samp>Seconds  Minutes  Hour  DayOfMonth  Month  DayOfWeek  (Year)</samp></p>' +
     '<p><strong>Example: every 30 minutes</strong></p><samp>0 0/30 * * * ?</samp>',
 
-    'serverGroup.description': '<p>A server group is a collection of instances managed together. </p>' +
-      '<ul>' +
-      '<li>For <b>AWS</b>, a server group is an <b>Auto Scaling Group</b>.</li>' +
-      '<li>For <b>GCE</b>, a server group is an <b>Instance Group</b>.</li>' +
-      '</ul>',
+    'cluster.description': '<p>A cluster is a collection of server groups with the same name (stack + detail) in the same account.</p>',
 
     'pipeline.config.findAmi.cluster': 'The cluster to look at when selecting the AMI to use in this pipeline.',
     'pipeline.config.dependsOn': 'Declares which stages must be run <em>before</em> this stage begins.',

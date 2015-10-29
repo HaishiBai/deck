@@ -5,15 +5,15 @@ let angular = require('angular');
 module.exports = angular.module('spinnaker.aws.serverGroup.configure.service', [
   require('../../image/image.reader.js'),
   require('../../../core/account/account.service.js'),
-  require('../../../diff/diff.service.js'),
+  require('../../../core/diff/diff.service.js'),
   require('../../../core/naming/naming.service.js'),
-  require('../../../securityGroups/securityGroup.read.service.js'),
-  require('../../../amazon/instance/awsInstanceType.service.js'),
+  require('../../../core/securityGroup/securityGroup.read.service.js'),
+  require('../../instance/awsInstanceType.service.js'),
   require('../../subnet/subnet.read.service.js'),
   require('../../keyPairs/keyPairs.read.service.js'),
-  require('../../../loadBalancers/loadBalancer.read.service.js'),
+  require('../../../core/loadBalancer/loadBalancer.read.service.js'),
   require('../../../core/cache/cacheInitializer.js'),
-  require('../../../utils/lodash.js'),
+  require('../../../core/utils/lodash.js'),
 ])
   .factory('awsServerGroupConfigurationService', function($q, awsImageReader, accountService, securityGroupReader,
                                                           awsInstanceTypeService, cacheInitializer,
@@ -245,8 +245,9 @@ module.exports = angular.module('spinnaker.aws.serverGroup.configure.service', [
     }
 
     function configureSecurityGroupDiffs(command) {
-      var currentOptions = command.backingData.filtered.securityGroups;
-      var currentSecurityGroupNames = command.securityGroups.map(function(groupId) {
+      var currentOptions = command.backingData.filtered.securityGroups,
+          currentSecurityGroups = command.securityGroups || [];
+      var currentSecurityGroupNames = currentSecurityGroups.map(function(groupId) {
         var match = _(currentOptions).find({id: groupId});
         return match ? match.name : groupId;
       });

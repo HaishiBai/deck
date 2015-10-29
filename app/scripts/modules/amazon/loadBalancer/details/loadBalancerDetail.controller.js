@@ -4,16 +4,16 @@ let angular = require('angular');
 
 module.exports = angular.module('spinnaker.loadBalancer.aws.details.controller', [
   require('angular-ui-router'),
-  require('../../../securityGroups/securityGroup.read.service.js'),
-  require('../../../loadBalancers/loadBalancer.write.service.js'),
-  require('../../../loadBalancers/loadBalancer.read.service.js'),
-  require('../../../utils/lodash.js'),
-  require('../../../confirmationModal/confirmationModal.service.js'),
-  require('../../../insight/insightFilterState.model.js'),
+  require('../../../core/securityGroup/securityGroup.read.service.js'),
+  require('../../../core/loadBalancer/loadBalancer.write.service.js'),
+  require('../../../core/loadBalancer/loadBalancer.read.service.js'),
+  require('../../../core/utils/lodash.js'),
+  require('../../../core/confirmationModal/confirmationModal.service.js'),
+  require('../../../core/insight/insightFilterState.model.js'),
   require('../../../core/presentation/collapsibleSection/collapsibleSection.directive.js'),
-  require('../../../utils/selectOnDblClick.directive.js'),
+  require('../../../core/utils/selectOnDblClick.directive.js'),
 ])
-  .controller('awsLoadBalancerDetailsCtrl', function ($scope, $state, $exceptionHandler, $modal, loadBalancer, app, InsightFilterStateModel,
+  .controller('awsLoadBalancerDetailsCtrl', function ($scope, $state, $uibModal, loadBalancer, app, InsightFilterStateModel,
                                                    securityGroupReader, _, confirmationModalService, loadBalancerWriter, loadBalancerReader, $q) {
 
     $scope.state = {
@@ -55,23 +55,31 @@ module.exports = angular.module('spinnaker.loadBalancer.aws.details.controller',
             });
             $scope.securityGroups = _.sortBy(securityGroups, 'name');
           }
-        });
+        },
+          autoClose
+        );
       }
       if (!$scope.loadBalancer) {
-        $state.go('^');
+        autoClose();
       }
 
       return $q.when(null);
+    }
+
+    function autoClose() {
+      if ($scope.$$destroyed) {
+        return;
+      }
+      $state.params.allowModalToStayOpen = true;
+      $state.go('^', null, {location: 'replace'});
     }
 
     extractLoadBalancer();
 
     app.registerAutoRefreshHandler(extractLoadBalancer, $scope);
 
-    //BEN_TODO
-
     this.editLoadBalancer = function editLoadBalancer() {
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('../configure/editLoadBalancer.html'),
         controller: 'awsCreateLoadBalancerCtrl as ctrl',
         resolve: {
@@ -83,7 +91,7 @@ module.exports = angular.module('spinnaker.loadBalancer.aws.details.controller',
     };
 
     this.cloneLoadBalancer = function () {
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('../configure/createLoadBalancer.html'),
         controller: 'awsCreateLoadBalancerCtrl as ctrl',
         resolve: {

@@ -7,8 +7,8 @@ module.exports = angular.module('spinnaker.amazon.securityGroup.create.controlle
   require('../../../core/account/account.service.js'),
   require('../../../core/cache/infrastructureCaches.js'),
   require('../../../core/cache/cacheInitializer.js'),
-  require('../../../tasks/monitor/taskMonitorService.js'),
-  require('../../../securityGroups/securityGroup.read.service.js'),
+  require('../../../core/task/monitor/taskMonitorService.js'),
+  require('../../../core/securityGroup/securityGroup.read.service.js'),
 ])
   .controller('awsCreateSecurityGroupCtrl', function($scope, $modalInstance, $state, $controller,
                                                   accountService, securityGroupReader,

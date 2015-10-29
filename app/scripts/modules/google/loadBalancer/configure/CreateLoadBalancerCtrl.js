@@ -3,16 +3,16 @@
 let angular = require('angular');
 
 module.exports = angular.module('spinnaker.loadBalancer.gce.create.controller', [
-  require('../../../loadBalancers/loadBalancer.write.service.js'),
-  require('../../../loadBalancers/loadBalancer.read.service.js'),
+  require('../../../core/loadBalancer/loadBalancer.write.service.js'),
+  require('../../../core/loadBalancer/loadBalancer.read.service.js'),
   require('../../../core/account/account.service.js'),
   require('../loadBalancer.transformer.js'),
   require('../../../core/modal/wizard/modalWizard.service.js'),
-  require('../../../tasks/monitor/taskMonitorService.js'),
-  require('../../../google/gceRegionSelectField.directive.js'),
-  require('../../../search/search.service.js'),
+  require('../../../core/task/monitor/taskMonitorService.js'),
+  require('../../gceRegionSelectField.directive.js'),
+  require('../../../core/search/search.service.js'),
 ])
-  .controller('gceCreateLoadBalancerCtrl', function($scope, $modalInstance, $state, $exceptionHandler,
+  .controller('gceCreateLoadBalancerCtrl', function($scope, $modalInstance, $state,
                                                  application, loadBalancer, isNew, loadBalancerReader,
                                                  accountService, gceLoadBalancerTransformer,
                                                  _, searchService, modalWizardService, loadBalancerWriter, taskMonitorService) {

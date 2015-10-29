@@ -1,0 +1,49 @@
+<div class="rollup-pod-server-group clickable clickable-row"
+     waypoint="{{viewModel.waypoint}}"
+     ng-click="loadDetails($event)"
+     ng-class="{
+        disabled: viewModel.serverGroup.isDisabled,
+        active: $state.includes('**.serverGroup', {region: viewModel.serverGroup.region, accountId: viewModel.serverGroup.account, serverGroup: viewModel.serverGroup.name, provider: viewModel.serverGroup.type})
+     }">
+  <div class="cluster-container">
+    <div class="server-group-title" sticky-header added-offset-height="69"
+         sticky-if="headerIsSticky()">
+      <div class="container-fluid no-padding">
+        <div class="row">
+          <div class="col-md-8 col-sm-6 section-title">
+            <cloud-provider-logo provider="viewModel.serverGroup.type" height="16px" width="16px"></cloud-provider-logo>
+            <span class="server-group-sequence">{{ viewModel.serverGroupSequence }}</span><span ng-if="viewModel.jenkins">:</span>
+            <a ng-if="viewModel.jenkins"
+               href="{{viewModel.jenkins.href}}"
+               target="_blank">
+              Build: #{{ viewModel.jenkins.number }}
+            </a>
+            <span ng-if="!viewModel.hasBuildInfo">
+              (No build info)
+            </span>
+          </div>
+          <div class="col-md-4 col-sm-6 text-right">
+            <health-counts container="viewModel.serverGroup"></health-counts>
+            <running-tasks-tag
+                ng-if="viewModel.serverGroup.runningTasks.length || viewModel.serverGroup.executions.length"
+                application="application" tasks="viewModel.serverGroup.runningTasks" executions="viewModel.serverGroup.executions"></running-tasks-tag>
+            <load-balancers-tag
+                ng-if="viewModel.serverGroup.loadBalancers.length"
+                server-group="viewModel.serverGroup" max-display="1"></load-balancers-tag>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="instance-list" ng-if="sortFilter.showAllInstances">
+      <div ng-if="!sortFilter.listInstances">
+        <instances highlight="sortFilter.filter" instances="viewModel.instances"></instances>
+      </div>
+      <div ng-if="sortFilter.listInstances">
+        <instance-list instances="viewModel.instances"
+                       sort-filter="sortFilter"
+                       has-discovery="hasDiscovery"
+                       has-load-balancers="hasLoadBalancers"></instance-list>
+      </div>
+    </div>
+  </div>
+</div>

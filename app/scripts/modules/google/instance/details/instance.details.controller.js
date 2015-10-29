@@ -5,15 +5,15 @@ let angular = require('angular');
 module.exports = angular.module('spinnaker.instance.detail.gce.controller', [
   require('angular-ui-router'),
   require('angular-ui-bootstrap'),
-  require('../../../instance/instance.write.service.js'),
-  require('../../../instance/instance.read.service.js'),
-  require('../../../confirmationModal/confirmationModal.service.js'),
-  require('../../../utils/lodash.js'),
-  require('../../../insight/insightFilterState.model.js'),
+  require('../../../core/instance/instance.write.service.js'),
+  require('../../../core/instance/instance.read.service.js'),
+  require('../../../core/confirmationModal/confirmationModal.service.js'),
+  require('../../../core/utils/lodash.js'),
+  require('../../../core/insight/insightFilterState.model.js'),
   require('../../../core/history/recentHistory.service.js'),
-  require('../../../utils/selectOnDblClick.directive.js'),
+  require('../../../core/utils/selectOnDblClick.directive.js'),
 ])
-  .controller('gceInstanceDetailsCtrl', function ($scope, $state, $modal, InsightFilterStateModel,
+  .controller('gceInstanceDetailsCtrl', function ($scope, $state, $uibModal, InsightFilterStateModel,
                                                   instanceWriter, confirmationModalService, recentHistoryService,
                                                   instanceReader, _, instance, app, $q) {
 
@@ -36,7 +36,7 @@ module.exports = angular.module('spinnaker.instance.detail.gce.controller', [
       instance.health = instance.health || [];
       var displayableMetrics = instance.health.filter(
         function(metric) {
-          return metric.type !== 'GCE' || metric.state !== 'Unknown';
+          return metric.type !== 'Google' || metric.state !== 'Unknown';
         });
 
       // backfill details where applicable
@@ -141,19 +141,49 @@ module.exports = angular.module('spinnaker.instance.detail.gce.controller', [
             'https://console.developers.google.com/project/' + projectId + '/logs?service=compute.googleapis.com&minLogLevel=0&filters=text:' + $scope.instance.instanceId;
 
           $scope.instance.gcloudSSHCommand = 'gcloud compute ssh --project ' + projectId + ' --zone ' + $scope.instance.placement.availabilityZone + ' ' + instance.instanceId;
+
+          augmentTagsWithHelp();
         },
-        function() {
-          // When an instance is first starting up, we may not have the details cached in oort yet, but we still
-          // want to let the user see what details we have
-          $scope.state.loading = false;
-        });
+          autoClose
+        );
       }
 
       if (!instanceSummary) {
-        $state.go('^');
+        autoClose();
       }
 
       return $q.when(null);
+    }
+
+    function autoClose() {
+      if ($scope.$$destroyed) {
+        return;
+      }
+      $state.params.allowModalToStayOpen = true;
+      $state.go('^', null, {location: 'replace'});
+    }
+
+    function augmentTagsWithHelp() {
+      if (_.has($scope, 'instance.tags.items') && _.has($scope, 'instance.securityGroups')) {
+        let securityGroups = _($scope.instance.securityGroups).map(securityGroup => {
+          return _.find(app.securityGroups, { accountName: $scope.instance.account, region: 'global', id: securityGroup.groupdId });
+        }).compact().value();
+
+        let helpMap = {};
+
+        $scope.instance.tags.items.forEach(tag => {
+          let securityGroupsMatches = _.filter(securityGroups, securityGroup => _.includes(securityGroup.targetTags, tag));
+          let securityGroupMatchNames = _.pluck(securityGroupsMatches, 'name');
+
+          if (!_.isEmpty(securityGroupMatchNames)) {
+            let groupOrGroups = securityGroupMatchNames.length > 1 ? 'groups' : 'group';
+
+            helpMap[tag] = 'This tag associates this instance with security ' + groupOrGroups + ' <em>' + securityGroupMatchNames.join(', ') + '</em>.';
+          }
+        });
+
+        $scope.instance.tags.helpMap = helpMap;
+      }
     }
 
     function getNetwork() {
@@ -234,6 +264,38 @@ module.exports = angular.module('spinnaker.instance.detail.gce.controller', [
       });
     };
 
+    this.terminateInstanceAndShrinkServerGroup = function terminateInstanceAndShrinkServerGroup() {
+      var instance = $scope.instance;
+
+      var taskMonitor = {
+        application: app,
+        title: 'Terminating ' + instance.instanceId + ' and shrinking server group',
+        onApplicationRefresh: function() {
+          if ($state.includes('**.instanceDetails', {instanceId: instance.instanceId})) {
+            $state.go('^');
+          }
+        }
+      };
+
+      var submitMethod = function () {
+        return instanceWriter.terminateInstanceAndShrinkServerGroup(instance, app, {
+          serverGroupName: instance.serverGroup,
+          instanceIds: [instance.instanceId],
+          zone: instance.placement.availabilityZone,
+        });
+      };
+
+      confirmationModalService.confirm({
+        header: 'Really terminate ' + instance.instanceId + ' and shrink ' + instance.serverGroup + '?',
+        buttonText: 'Terminate ' + instance.instanceId + ' and shrink ' + instance.serverGroup,
+        destructive: true,
+        account: instance.account,
+        provider: 'gce',
+        taskMonitorConfig: taskMonitor,
+        submitMethod: submitMethod
+      });
+    };
+
     this.rebootInstance = function rebootInstance() {
       var instance = $scope.instance;
 
@@ -243,7 +305,10 @@ module.exports = angular.module('spinnaker.instance.detail.gce.controller', [
       };
 
       var submitMethod = function () {
-        return instanceWriter.rebootInstance(instance, app);
+        return instanceWriter.rebootInstance(instance, app, {
+          // We can't really reliably do anything other than ignore health here.
+          interestingHealthProviderNames: [],
+        });
       };
 
       confirmationModalService.confirm({
@@ -356,8 +421,8 @@ module.exports = angular.module('spinnaker.instance.detail.gce.controller', [
     };
 
     this.showConsoleOutput = function  () {
-      $modal.open({
-        templateUrl: require('../../../instance/details/console/consoleOutput.modal.html'),
+      $uibModal.open({
+        templateUrl: require('../../../core/instance/details/console/consoleOutput.modal.html'),
         controller: 'ConsoleOutputCtrl as ctrl',
         size: 'lg',
         resolve: {

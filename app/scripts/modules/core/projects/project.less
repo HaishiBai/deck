@@ -23,19 +23,18 @@
   flex: 0 0 auto;
   -webkit-flex: 0 0 auto;
 
-  select.no-border {
-    border: 0;
-    box-shadow: none;
-    font-size: 90%;
-    font-weight: 600;
-    &:focus {
-      outline-width: 1px;
-    }
+  .nav-popover-menu {
+    z-index: 25;
   }
 
   .project-name {
     font-weight: 700;
   }
+  .project-view {
+    position: relative;
+    display: inline-block;
+  }
+
   .configure-project-link {
     margin: 20px 0 5px;
     color: @configure-link-color;

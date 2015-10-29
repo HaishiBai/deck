@@ -5,12 +5,12 @@ var angular = require('angular');
 module.exports = angular
   .module('spinnaker.google.securityGroup.baseConfig.controller', [
     require('angular-ui-router'),
-    require('../../../tasks/monitor/taskMonitorService.js'),
-    require('../../../securityGroups/securityGroup.write.service.js'),
+    require('../../../core/task/monitor/taskMonitorService.js'),
+    require('../../../core/securityGroup/securityGroup.write.service.js'),
     require('../../../core/account/account.service.js'),
     require('../../../core/modal/wizard/modalWizard.service.js'),
-    require('../../../network/network.read.service.js'),
-    require('../../../utils/lodash.js'),
+    require('../../../core/network/network.read.service.js'),
+    require('../../../core/utils/lodash.js'),
   ])
   .controller('gceConfigSecurityGroupMixin', function ($scope,
                                                        $state,

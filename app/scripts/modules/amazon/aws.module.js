@@ -2,21 +2,26 @@
 
 let angular = require('angular');
 
+require('./logo/aws.logo.less');
+
 module.exports = angular.module('spinnaker.aws', [
   require('../core/cloudProvider/cloudProvider.registry.js'),
+  require('../core/pipeline/config/stages/bake/aws/awsBakeStage.js'),
+  require('../core/pipeline/config/stages/destroyAsg/aws/awsDestroyAsgStage.js'),
+  require('../core/pipeline/config/stages/disableAsg/aws/awsDisableAsgStage.js'),
+  require('../core/pipeline/config/stages/enableAsg/aws/awsEnableAsgStage.js'),
+  require('../core/pipeline/config/stages/findAmi/aws/awsFindAmiStage.js'),
+  require('../core/pipeline/config/stages/resizeAsg/aws/awsResizeAsgStage.js'),
   require('./serverGroup/details/serverGroup.details.module.js'),
   require('./serverGroup/serverGroup.transformer.js'),
   require('./serverGroup/configure/wizard/CloneServerGroup.aws.controller.js'),
   require('./serverGroup/configure/serverGroup.configure.aws.module.js'),
-  require('../pipelines/config/stages/bake/aws/awsBakeStage.js'),
-  require('../pipelines/config/stages/destroyAsg/aws/awsDestroyAsgStage.js'),
-  require('../pipelines/config/stages/resizeAsg/aws/awsResizeAsgStage.js'),
-  require('../amazon/instance/awsInstanceType.service.js'),
+  require('./instance/awsInstanceType.service.js'),
   require('./loadBalancer/loadBalancer.transformer.js'),
   require('./loadBalancer/details/loadBalancerDetail.controller.js'),
   require('./loadBalancer/configure/createLoadBalancer.controller.js'),
   require('./instance/details/instance.details.controller.js'),
-  require('../amazon/securityGroup/details/securityGroupDetail.controller.js'),
+  require('./securityGroup/details/securityGroupDetail.controller.js'),
   require('./securityGroup/configure/CreateSecurityGroupCtrl.js'),
   require('./keyPairs/keyPairs.read.service.js'),
   require('./securityGroup/configure/EditSecurityGroupCtrl.js'),
@@ -26,11 +31,12 @@ module.exports = angular.module('spinnaker.aws', [
   require('./vpc/vpc.module.js'),
   require('./image/image.reader.js'),
   require('./cache/cacheConfigurer.service.js'),
+  require('./search/searchResultFormatter.js'),
 ])
   .config(function(cloudProviderRegistryProvider) {
     cloudProviderRegistryProvider.registerProvider('aws', {
       logo: {
-        path: require('./logo_aws.png'),
+        path: require('./logo/aws.logo.png'),
       },
       cache: {
         configurer: 'awsCacheConfigurer',
@@ -62,10 +68,13 @@ module.exports = angular.module('spinnaker.aws', [
       securityGroup: {
         transformer: 'awsSecurityGroupTransformer',
         reader: 'awsSecurityGroupReader',
-        detailsTemplateUrl: require('../amazon/securityGroup/details/securityGroupDetail.html'),
+        detailsTemplateUrl: require('./securityGroup/details/securityGroupDetail.html'),
         detailsController: 'awsSecurityGroupDetailsCtrl',
         createSecurityGroupTemplateUrl: require('./securityGroup/configure/createSecurityGroup.html'),
         createSecurityGroupController: 'awsCreateSecurityGroupCtrl',
+      },
+      search: {
+        resultFormatter: 'awsSearchResultFormatter',
       }
     });
   }).name;

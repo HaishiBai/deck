@@ -4,8 +4,8 @@ let angular = require('angular');
 
 module.exports = angular
   .module('spinnaker.applications.write.service', [
-    require('../../../tasks/taskExecutor.js'),
-    require('../../../utils/lodash.js'),
+    require('../../task/taskExecutor.js'),
+    require('../../utils/lodash.js'),
   ])
   .factory('applicationWriter', function($q, taskExecutor, _) {
 
@@ -30,7 +30,10 @@ module.exports = angular
               tags: app.tags,
               repoProjectKey: app.repoProjectKey,
               repoSlug: app.repoSlug,
-              repoType: app.repoType
+              repoType: app.repoType,
+              cloudProviders: app.cloudProviders.join(','),
+              platformHealthOnly: app.platformHealthOnly,
+              platformHealthOnlyShowOverride: app.platformHealthOnlyShowOverride,
             }
           }
         ],
@@ -64,7 +67,10 @@ module.exports = angular
                 tags: app.tags,
                 repoProjectKey: app.repoProjectKey,
                 repoSlug: app.repoSlug,
-                repoType: app.repoType
+                repoType: app.repoType,
+                cloudProviders: app.cloudProviders.join(','),
+                platformHealthOnly: app.platformHealthOnly,
+                platformHealthOnlyShowOverride: app.platformHealthOnlyShowOverride,
               }
             }
           ],

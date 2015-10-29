@@ -21,17 +21,17 @@ let angular = require('angular');
 module.exports = angular.module('spinnaker.securityGroup.gce.details.controller', [
   require('angular-ui-router'),
   require('../../../core/account/account.service.js'),
-  require('../../../securityGroups/securityGroup.read.service.js'),
-  require('../../../securityGroups/securityGroup.write.service.js'),
-  require('../../../confirmationModal/confirmationModal.service.js'),
-  require('../../../utils/lodash.js'),
-  require('../../../insight/insightFilterState.model.js'),
+  require('../../../core/securityGroup/securityGroup.read.service.js'),
+  require('../../../core/securityGroup/securityGroup.write.service.js'),
+  require('../../../core/confirmationModal/confirmationModal.service.js'),
+  require('../../../core/utils/lodash.js'),
+  require('../../../core/insight/insightFilterState.model.js'),
   require('../clone/cloneSecurityGroup.controller.js'),
-  require('../../../utils/selectOnDblClick.directive.js'),
+  require('../../../core/utils/selectOnDblClick.directive.js'),
 ])
   .controller('gceSecurityGroupDetailsCtrl', function ($scope, $state, resolvedSecurityGroup, accountService, app, InsightFilterStateModel,
                                                     confirmationModalService, securityGroupWriter, securityGroupReader,
-                                                    $modal, _) {
+                                                    $uibModal, _) {
 
     const application = app;
     const securityGroup = resolvedSecurityGroup;
@@ -99,19 +99,22 @@ module.exports = angular.module('spinnaker.securityGroup.gce.details.controller'
           });
         }
       },
-      function() {
-        fourOhFour();
-      });
+        fourOhFour
+      );
     }
 
     function fourOhFour() {
-      $state.go('^');
+      if ($scope.$$destroyed) {
+        return;
+      }
+      $state.params.allowModalToStayOpen = true;
+      $state.go('^', null, {location: 'replace'});
     }
 
     extractSecurityGroup().then(() => application.registerAutoRefreshHandler(extractSecurityGroup, $scope));
 
     this.editInboundRules = function editInboundRules() {
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('../configure/editSecurityGroup.html'),
         controller: 'gceEditSecurityGroupCtrl as ctrl',
         resolve: {
@@ -125,7 +128,7 @@ module.exports = angular.module('spinnaker.securityGroup.gce.details.controller'
 
 
     this.cloneSecurityGroup = function cloneSecurityGroup() {
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('../clone/cloneSecurityGroup.html'),
         controller: 'gceCloneSecurityGroupController as ctrl',
         resolve: {

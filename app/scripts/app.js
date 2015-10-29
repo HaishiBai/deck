@@ -27,23 +27,9 @@ require('source-sans-pro');
 let Clipboard = require('clipboard');
 
 // likely that some of these can be moved to the modules that support them
-require('./modules/core/application/application.less');
-require('./modules/healthCounts/counters.less');
-require('./modules/delivery/delivery.less');
 require('./modules/core/presentation/details.less');
-require('./modules/fastProperties/fastProperties.less');
-require('./modules/instance/instanceSelection.less');
+require('./modules/core/instance/instanceSelection.less');
 require('./modules/core/presentation/main.less');
-require('./modules/core/modal/modals.less');
-require('./modules/navigation/navigation.less');
-require('./modules/core/application/newapplication.less');
-require('./modules/pipelines/pipelines.less');
-require('./modules/cluster/rollups.less');
-require('./modules/tasks/tasks.less');
-require('./modules/utils/stickyHeader/stickyHeader.less');
-
-require('./modules/search/global/globalSearch.less');
-require('./modules/confirmationModal/confirmationModal.less');
 
 require('../fonts/spinnaker/icons.css');
 
@@ -62,6 +48,7 @@ templates.keys().forEach(function(key) {
 module.exports = angular.module('spinnaker', [
     require('angular-sanitize'),
     require('angular-messages'),
+    require('./modules/core/utils/timeFormatters.js'),
     require('exports?"ui.select"!ui-select'),
     require('exports?"cfp.hotkeys"!angular-hotkeys'),
     require('angular-animate'),
@@ -78,96 +65,97 @@ module.exports = angular.module('spinnaker', [
     require('./modules/core/modal/modal.module.js'),
 
     require('exports?"angular.filter"!angular-filter'),
-    require('./modules/navigation/states.provider.js'),
-    require('./modules/delivery/states.js'),
+    require('./modules/core/navigation/states.provider.js'),
+    require('./modules/core/delivery/states.js'),
     require('exports?"infinite-scroll"!ng-infinite-scroll/build/ng-infinite-scroll.js'),
 
-    require('./modules/insight/insight.module.js'),
+    require('./modules/core/insight/insight.module.js'),
     require('./modules/core/application/application.module.js'),
-    require('./modules/feedback/feedback.module.js'),
+    require('./modules/netflix/feedback/feedback.module.js'),
 
     require('./modules/amazon/aws.module.js'),
     require('./modules/google/gce.module.js'),
+    require('./modules/cloudfoundry/cf.module.js'),
+    require('./modules/titan/titan.module.js'),
     require('./modules/azure/azure.module.js'),
-    require('./modules/utils/utils.module.js'),
+    require('./modules/core/utils/utils.module.js'),
     require('./modules/core/cache/caches.module.js'),
     require('./modules/core/naming/naming.service.js'),
     require('./modules/core/cloudProvider/serviceDelegate.service.js'),
-    require('./modules/healthCounts/healthCounts.directive.js'),
-    require('./modules/config/settings.js'),
-    require('./modules/scheduler/scheduler.service.js'),
-    require('./modules/clusterFilter/cluster.filter.module.js'),
-    require('./modules/confirmationModal/confirmationModal.service.js'),
-    require('./modules/deploymentStrategy/deploymentStrategy.module.js'),
-    require('./modules/deploymentStrategy/strategies/redblack/redblack.strategy.module.js'),
-    require('./modules/deploymentStrategy/strategies/none/none.strategy.module.js'),
-    require('./modules/deploymentStrategy/strategies/highlander/highlander.strategy.module.js'),
-    require('./modules/deploymentStrategy/strategies/rollingPush/rollingPush.strategy.module.js'),
-    require('./modules/serverGroups/serverGroup.module.js'),
-    require('./modules/securityGroups/securityGroup.module.js'),
-    require('./modules/instance/instance.module.js'),
+    require('./modules/core/healthCounts/healthCounts.directive.js'),
+    require('./modules/core/config/settings.js'),
+    require('./modules/core/scheduler/scheduler.service.js'),
+    require('./modules/core/confirmationModal/confirmationModal.service.js'),
+    require('./modules/core/deploymentStrategy/deploymentStrategy.module.js'),
+    require('./modules/core/deploymentStrategy/strategies/redblack/redblack.strategy.module.js'),
+    require('./modules/core/deploymentStrategy/strategies/none/none.strategy.module.js'),
+    require('./modules/core/deploymentStrategy/strategies/highlander/highlander.strategy.module.js'),
+    require('./modules/core/deploymentStrategy/strategies/rollingPush/rollingPush.strategy.module.js'),
+    require('./modules/core/serverGroup/serverGroup.module.js'),
+    require('./modules/core/securityGroup/securityGroup.module.js'),
+    require('./modules/core/instance/instance.module.js'),
     require('./modules/core/pageTitle/pageTitle.service.js'),
     require('./modules/core/help/help.module.js'),
-    require('./modules/delivery/delivery.module.js'),
-    require('./modules/pipelines/pipelines.module.js'),
-    require('./modules/pipelines/config/stages/bake/bakeStage.module.js'),
-    require('./modules/pipelines/config/stages/canary/canaryStage.module.js'),
-    require('./modules/pipelines/config/stages/core/stage.core.module.js'),
-    require('./modules/pipelines/config/stages/deploy/deployStage.module.js'),
-    require('./modules/pipelines/config/stages/destroyAsg/destroyAsgStage.module.js'),
-    require('./modules/pipelines/config/stages/disableAsg/disableAsgStage.module.js'),
-    require('./modules/pipelines/config/stages/enableAsg/enableAsgStage.module.js'),
-    require('./modules/pipelines/config/stages/executionWindows/executionWindowsStage.module.js'),
-    require('./modules/pipelines/config/stages/findAmi/findAmiStage.module.js'),
-    require('./modules/pipelines/config/stages/jenkins/jenkinsStage.module.js'),
-    require('./modules/pipelines/config/stages/manualJudgment/manualJudgmentStage.module.js'),
-    require('./modules/pipelines/config/stages/modifyScalingProcess/modifyScalingProcess.module.js'),
-    require('./modules/pipelines/config/stages/pipeline/pipelineStage.module.js'),
-    require('./modules/pipelines/config/stages/quickPatchAsg/quickPatchAsgStage.module.js'),
-    require('./modules/pipelines/config/stages/quickPatchAsg/bulkQuickPatchStage/bulkQuickPatchStage.module.js'),
-    require('./modules/pipelines/config/stages/resizeAsg/resizeAsgStage.module.js'),
-    require('./modules/pipelines/config/stages/script/scriptStage.module.js'),
-    require('./modules/pipelines/config/stages/shrinkCluster/shrinkClusterStage.module.js'),
-    require('./modules/pipelines/config/stages/wait/waitStage.module.js'),
-    require('./modules/pipelines/config/stages/determineTargetReference/determineTargetReference.module.js'),
+    require('./modules/core/delivery/delivery.module.js'),
+    require('./modules/core/pipeline/pipelines.module.js'),
+    require('./modules/core/pipeline/config/stages/bake/bakeStage.module.js'),
+    require('./modules/core/pipeline/config/stages/canary/canaryStage.module.js'),
+    require('./modules/core/pipeline/config/stages/core/stage.core.module.js'),
+    require('./modules/core/pipeline/config/stages/deploy/deployStage.module.js'),
+    require('./modules/core/pipeline/config/stages/destroyAsg/destroyAsgStage.module.js'),
+    require('./modules/core/pipeline/config/stages/disableAsg/disableAsgStage.module.js'),
+    require('./modules/core/pipeline/config/stages/disableCluster/disableClusterStage.module.js'),
+    require('./modules/core/pipeline/config/stages/enableAsg/enableAsgStage.module.js'),
+    require('./modules/core/pipeline/config/stages/executionWindows/executionWindowsStage.module.js'),
+    require('./modules/core/pipeline/config/stages/findAmi/findAmiStage.module.js'),
+    require('./modules/core/pipeline/config/stages/jenkins/jenkinsStage.module.js'),
+    require('./modules/core/pipeline/config/stages/manualJudgment/manualJudgmentStage.module.js'),
+    require('./modules/core/pipeline/config/stages/modifyScalingProcess/modifyScalingProcess.module.js'),
+    require('./modules/core/pipeline/config/stages/pipeline/pipelineStage.module.js'),
+    require('./modules/core/pipeline/config/stages/quickPatchAsg/quickPatchAsgStage.module.js'),
+    require('./modules/core/pipeline/config/stages/quickPatchAsg/bulkQuickPatchStage/bulkQuickPatchStage.module.js'),
+    require('./modules/core/pipeline/config/stages/resizeAsg/resizeAsgStage.module.js'),
+    require('./modules/core/pipeline/config/stages/scaleDownCluster/scaleDownClusterStage.module.js'),
+    require('./modules/core/pipeline/config/stages/script/scriptStage.module.js'),
+    require('./modules/core/pipeline/config/stages/shrinkCluster/shrinkClusterStage.module.js'),
+    require('./modules/core/pipeline/config/stages/wait/waitStage.module.js'),
+    require('./modules/core/pipeline/config/stages/determineTargetReference/determineTargetReference.module.js'),
+    require('./modules/core/pipeline/config/stages/checkPreconditions/checkPreconditionsStage.module.js'),
+    require('./modules/core/pipeline/config/preconditions/preconditions.module.js'),
+    require('./modules/core/pipeline/config/preconditions/types/clusterSize/clusterSize.precondition.type.module.js'),
+    require('./modules/core/pipeline/config/preconditions/types/expression/expression.precondition.type.module.js'),
     require('./modules/core/authentication/authentication.module.js'),
-    require('./modules/search/search.module.js'),
-    require('./modules/notifications/notifications.module.js'),
-    require('./modules/notifications/types/email/email.notification.type.module.js'),
-    require('./modules/notifications/types/hipchat/hipchat.notification.type.module.js'),
-    require('./modules/notifications/types/sms/sms.notification.type.module.js'),
-    require('./modules/tasks/tasks.module.js'),
-    require('./modules/tasks/monitor/taskMonitor.module.js'),
-    require('./modules/validation/validation.module.js'),
-    require('./modules/loadBalancers/loadBalancers.module.js'),
-    require('./modules/whatsNew/whatsNew.directive.js'),
+    require('./modules/core/cloudProvider/cloudProviderLogo.directive.js'),
+    require('./modules/core/search/search.module.js'),
+    require('./modules/core/notification/notifications.module.js'),
+    require('./modules/core/notification/types/email/email.notification.type.module.js'),
+    require('./modules/core/notification/types/hipchat/hipchat.notification.type.module.js'),
+    require('./modules/core/notification/types/sms/sms.notification.type.module.js'),
+    require('./modules/core/task/task.module.js'),
+    require('./modules/core/task/monitor/taskMonitor.module.js'),
+    require('./modules/core/validation/validation.module.js'),
+    require('./modules/core/loadBalancer/loadBalancer.module.js'),
+    require('./modules/core/cluster/cluster.module.js'),
+    require('./modules/netflix/whatsNew/whatsNew.directive.js'),
     require('./modules/netflix/blesk/blesk.module.js'),
-    require('./modules/fastProperties/fastProperties.module.js'),
+    require('./modules/netflix/fastProperties/fastProperties.module.js'),
+    require('./modules/netflix/alert/alertHandler.js'),
     require('./modules/core/account/accountLabelColor.directive.js'),
     require('./modules/core/history/recentHistory.service.js'),
     require('./config.js'),
 ])
-  .run(function($state, $rootScope, $log, $exceptionHandler, cacheInitializer, $modalStack, pageTitleService, settings, recentHistoryService) {
+  .run(function($state, $rootScope, $log, cacheInitializer, $uibModalStack, pageTitleService, settings, recentHistoryService) {
     // This can go away when the next version of ui-router is available (0.2.11+)
     // for now, it's needed because ui-sref-active does not work on parent states
     // and we have to use ng-class. It's gross.
     //
     cacheInitializer.initialize();
-    $rootScope.subscribeTo = function(observable) {
-      this.subscribed = {
-        data: undefined
-      };
-
-      observable.subscribe(function(data) {
-        this.subscribed.data = data;
-      }.bind(this), function(err) {
-        $exceptionHandler(err, 'Failed to load data into the view.');
-      });
-    };
 
     $rootScope.$state = $state;
     $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams) {
-      $modalStack.dismissAll();
+      if (!fromParams.allowModalToStayOpen) {
+        $uibModalStack.dismissAll();
+      }
       $log.debug(event.name, {
         event: event,
         toState: toState,
@@ -255,15 +243,15 @@ module.exports = angular.module('spinnaker', [
   })
   .run(function($templateCache) {
     $templateCache.put('template/popover/popover.html',
-        '<div class="popover {{placement}}" ng-class="{ in: isOpen(), fade: animation() }">\n' +
-        '  <div class="arrow"></div>\n' +
-        '\n' +
-        '  <div class="popover-inner">\n' +
-        '      <h3 class="popover-title" ng-bind="title" ng-show="title"></h3>\n' +
-        '      <div class="popover-content" ng-bind-html="content"></div>\n' +
-        '  </div>\n' +
-        '</div>\n' +
-        '');
+      '<div tooltip-animation-class="fade"' +
+      '  uib-tooltip-classes' +
+      '  ng-class="{ in: isOpen() }">' +
+      '  <div class="arrow"></div>' +
+      '  <div class="popover-inner">' +
+      '      <h3 class="popover-title" ng-bind="title" ng-if="title"></h3>' +
+      '      <div class="popover-content" ng-bind-html="content"></div>' +
+      '  </div>' +
+    '  </div>');
   }).run(function($state, hotkeys) {
     let globalHotkeys = [
       {
@@ -287,4 +275,3 @@ module.exports = angular.module('spinnaker', [
     globalHotkeys.forEach((hotkeyConfig) => hotkeys.add(hotkeyConfig));
   })
 ;
-

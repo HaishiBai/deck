@@ -7,8 +7,8 @@ module.exports = angular
     //require('angular-ui-router'),
     require('../service/applications.write.service.js'),
     require('../service/applications.read.service.js'),
-    require('../../../utils/lodash.js'),
-    require('../../../core/account/account.service.js'),
+    require('../../utils/lodash.js'),
+    require('../../account/account.service.js'),
   ])
   .controller('CreateApplicationModalCtrl', function($scope, $q, $log, $state, $modalInstance, accountService, applicationWriter, applicationReader, _) {
     var vm = this;
@@ -19,11 +19,16 @@ module.exports = angular
     let accountLoader = accountService.listAccounts();
     accountLoader.then((accounts) => vm.accounts = accounts);
 
-    $q.all([accountLoader, applicationLoader]).then(() => vm.initializing = false);
+    let providerLoader = accountService.listProviders();
+    providerLoader.then((providers) => vm.cloudProviders = providers);
+
+    $q.all([accountLoader, applicationLoader, providerLoader]).then(() => vm.initializing = false);
 
     vm.initializing = true;
     vm.submitting = false;
-    vm.application = {};
+    vm.application = {
+      cloudProviders: [],
+    };
     vm.errorMsgs = [];
     vm.emailErrorMsg = [];
 

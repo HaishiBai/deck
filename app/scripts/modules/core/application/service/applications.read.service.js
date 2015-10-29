@@ -5,33 +5,28 @@ let angular = require('angular');
 module.exports = angular
   .module('spinnaker.applications.read.service', [
     require('exports?"restangular"!imports?_=lodash!restangular'),
-    require('../../../cluster/clusterService.js'),
-    require('../../../tasks/tasks.read.service.js'),
-    require('../../../loadBalancers/loadBalancer.read.service.js'),
-    require('../../../loadBalancers/loadBalancer.transformer.js'),
-    require('../../../securityGroups/securityGroup.read.service.js'),
+    require('../../cluster/cluster.service.js'),
+    require('../../task/task.read.service.js'),
+    require('../../loadBalancer/loadBalancer.read.service.js'),
+    require('../../loadBalancer/loadBalancer.transformer.js'),
+    require('../../securityGroup/securityGroup.read.service.js'),
     require('../../cache/infrastructureCaches.js'),
-    require('../../../scheduler/scheduler.service.js'),
-    require('../../../delivery/executionsService.js'),
-    require('../../../serverGroups/serverGroup.transformer.js'),
+    require('../../scheduler/scheduler.service.js'),
+    require('../../delivery/service/execution.service.js'),
+    require('../../serverGroup/serverGroup.transformer.js'),
+    require('../../pipeline/config/services/pipelineConfigService.js'),
   ])
-  .factory('applicationReader', function ($q, $log, $window,  $exceptionHandler, $rootScope, Restangular, _, clusterService, tasksReader,
+  .factory('applicationReader', function ($q, $log, $window,  $rootScope, Restangular, _, clusterService, taskReader,
                                           loadBalancerReader, loadBalancerTransformer, securityGroupReader, scheduler,
-                                          infrastructureCaches, settings, executionsService, serverGroupTransformer) {
+                                          pipelineConfigService,
+                                          infrastructureCaches, settings, executionService, serverGroupTransformer) {
 
-    function listApplications(forceRemoteCall) {
-      var endpoint = Restangular
+    function listApplications() {
+      return Restangular
         .all('applications')
-        .withHttpConfig({cache: infrastructureCaches.applications});
-
-      if (forceRemoteCall) {
-        infrastructureCaches.applications.remove(endpoint.getRestangularUrl());
-      }
-
-      return endpoint.getList();
+        .withHttpConfig({cache: true})
+        .getList();
     }
-
-
 
     var gateEndpoint = Restangular.withConfig(function(RestangularConfigurer) {
 
@@ -42,15 +37,25 @@ module.exports = angular
           application.reloadTasks();
           application.reloadExecutions();
           return getApplication(application.name).then(function (newApplication) {
-            deepCopyApplication(application, newApplication);
-            application.autoRefreshHandlers.forEach(function (handler) {
-              handler.call();
-            });
-            newApplication = null;
+            if (newApplication) {
+              deepCopyApplication(application, newApplication);
+              application.autoRefreshHandlers.forEach((handler) => handler.call());
+              application.oneTimeRefreshHandlers.forEach((handler) => handler.call());
+              application.oneTimeRefreshHandlers = [];
+              newApplication = null;
+            }
             application.refreshing = false;
           });
         }
 
+
+        function deregisterAutoRefreshHandler(method) {
+          application.autoRefreshHandlers = application.autoRefreshHandlers.filter((handler) => handler !== method);
+        }
+
+        function registerOneTimeRefreshHandler(handler) {
+          application.oneTimeRefreshHandlers.push(handler);
+        }
 
         function registerAutoRefreshHandler(method, scope) {
           if (scope.$$destroyed) {
@@ -68,36 +73,67 @@ module.exports = angular
         }
 
         function reloadTasks() {
-          return tasksReader.listAllTasksForApplication(application.name).then(function(tasks) {
-            addTasksToApplication(application, tasks);
-            if (!application.tasksLoaded) {
-              application.tasksLoaded = true;
-              $rootScope.$broadcast('tasks-loaded', application);
-            } else {
-              $rootScope.$broadcast('tasks-reloaded', application);
-            }
-          });
+          return taskReader.listAllTasksForApplication(application.name)
+            .then(function(tasks) {
+              addTasksToApplication(application, tasks);
+              if (!application.tasksLoaded) {
+                application.tasksLoaded = true;
+                $rootScope.$broadcast('tasks-loaded', application);
+              } else {
+                $rootScope.$broadcast('tasks-reloaded', application);
+              }
+            })
+            .catch(function(rejection) {
+              // Gate will send back a 429 error code (TOO_MANY_REQUESTS) and will be caught here
+              // As a quick fix we are just adding an empty list to of tasks to the
+              // application, which will let the user know that no tasks where found for the app.
+              addTasksToApplication(application, []);
+              $log.warn('Error retrieving [tasks]', rejection);
+            });
         }
 
         function reloadExecutions() {
-          return executionsService.getAll(application).then(function(execution) {
-            addExecutionsToApplication(application, execution);
-            if (!application.executionsLoaded) {
-              application.executionsLoaded = true;
-              $rootScope.$broadcast('executions-loaded', application);
-            } else {
-              $rootScope.$broadcast('executions-reloaded', application);
-            }
-          });
+          application.executionsLoading = true;
+          return executionService.getAll(application.name)
+            .then(function(executions) {
+              executionService.transformExecutions(application, executions);
+              addExecutionsToApplication(application, executions);
+              if (!application.executionsLoaded) {
+                application.executionsLoading = false;
+                application.executionsLoaded = true;
+                $rootScope.$broadcast('executions-loaded', application);
+              } else {
+                $rootScope.$broadcast('executions-reloaded', application);
+              }
+            })
+            .catch(function(rejection) {
+              // Gate will send back a 429 error code (TOO_MANY_REQUESTS) and will be caught here.
+              $log.warn('Error retrieving [executions]', rejection);
+              $rootScope.$broadcast('executions-load-failure', application);
+            });
+        }
+
+        function reloadPipelineConfigs() {
+          application.pipelineConfigsLoading = true;
+          return pipelineConfigService.getPipelinesForApplication(application.name)
+            .then((configs) => {
+              application.pipelineConfigs = configs;
+              application.pipelineConfigsLoading = false;
+              $rootScope.$broadcast('pipelineConfigs-loaded', application);
+            });
         }
 
 
         application.registerAutoRefreshHandler = registerAutoRefreshHandler;
+        application.deregisterAutoRefreshHandler = deregisterAutoRefreshHandler;
+        application.registerOneTimeRefreshHandler = registerOneTimeRefreshHandler;
         application.autoRefreshHandlers = [];
+        application.oneTimeRefreshHandlers = [];
         application.refreshImmediately = scheduler.scheduleImmediate;
         application.enableAutoRefresh = enableAutoRefresh;
         application.reloadTasks = reloadTasks;
         application.reloadExecutions = reloadExecutions;
+        application.reloadPipelineConfigs = reloadPipelineConfigs;
 
         if (application.fromServer && application.clusters) {
           application.accounts = Object.keys(application.clusters);
@@ -142,7 +178,11 @@ module.exports = angular
     }
 
     function addExecutionsToApplication(application, executions=[]) {
-      if (application.executions) {
+      // only add executions if we actually got some executions back
+      // this will fail if there was just one execution and someone just deleted it
+      // but that is much less likely at this point than orca falling over under load,
+      // resulting in an empty list of executions coming back
+      if (application.executions && application.executions.length && executions.length) {
 
         // remove any that have dropped off, update any that have changed
         let toRemove = [];
@@ -196,7 +236,8 @@ module.exports = angular
       var securityGroupsByApplicationNameLoader = securityGroupReader.loadSecurityGroupsByApplicationName(applicationName),
         loadBalancerLoader = loadBalancerReader.loadLoadBalancers(applicationName),
         applicationLoader = getApplicationEndpoint(applicationName).get(),
-        serverGroupLoader = clusterService.loadServerGroups(applicationName);
+        serverGroupLoader = clusterService.loadServerGroups(applicationName),
+        executionsLoader = options && options.executions ? executionService.getAll(applicationName) : $q.when(null);
 
       var application, securityGroupAccounts, loadBalancerAccounts, serverGroups;
 
@@ -205,10 +246,18 @@ module.exports = angular
       return $q.all({
         securityGroups: securityGroupsByApplicationNameLoader,
         loadBalancers: loadBalancerLoader,
-        application: applicationLoader
+        application: applicationLoader,
+        executions: executionsLoader,
       })
         .then(function(applicationLoader) {
           application = applicationLoader.application;
+
+          // These attributes are stored as strings.
+          application.attributes.platformHealthOnly = (application.attributes.platformHealthOnly === 'true');
+          application.attributes.platformHealthOnlyShowOverride = (application.attributes.platformHealthOnlyShowOverride === 'true');
+
+          application.executionsLoading = false;
+
           application.lastRefresh = new Date().getTime();
           securityGroupAccounts = _(applicationLoader.securityGroups).pluck('account').unique().value();
           loadBalancerAccounts = _(applicationLoader.loadBalancers).pluck('account').unique().value();
@@ -223,7 +272,13 @@ module.exports = angular
           }
 
           if (options && options.executions) {
-            application.reloadExecutions();
+            executionService.transformExecutions(application, applicationLoader.executions);
+            addExecutionsToApplication(application, applicationLoader.executions);
+            application.executionsLoaded = true;
+          }
+
+          if (options && options.pipelineConfigs) {
+            application.reloadPipelineConfigs();
           }
 
           securityGroupLoader = securityGroupReader.loadSecurityGroups(application);
@@ -252,11 +307,11 @@ module.exports = angular
                     return application;
                   },
                   function(err) {
-                    $exceptionHandler(err, 'Failed to load application');
+                    $log.error(err, 'Failed to load application');
                   }
                 );
             }, function(err) {
-              $exceptionHandler(err, 'Failed to load application');
+              $log.error(err, 'Failed to load application');
             });
         });
     }

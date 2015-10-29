@@ -3,7 +3,9 @@
   <div class="modal-header">
     <h3 data-purpose="modal-header">New Application</h3>
   </div>
-
+  <div ng-if="newAppModal.initializing" style="height: 200px">
+    <h3 us-spinner="{radius:30, width:8, length: 16}"></h3>
+  </div>
   <form role="form" class="container-fluid" novalidate name="newApplicationForm" ng-if="!newAppModal.initializing">
     <div class="modal-body">
       <div class="form-group row">
@@ -18,6 +20,7 @@
                  ng-model="newAppModal.application.name"
                  placeholder="Enter an application name"
                  validate-unique="newAppModal.appNameList"
+                 required
                  id="applicationName">
           </input>
         </div>
@@ -144,8 +147,49 @@
           <account-select-field component="newAppModal.application" field="account" accounts="newAppModal.accounts" provider="'aws'" multiselect="true"></account-select-field>
         </div>
       </div>
-    </div>
 
+      <div class="form-group row" ng-if="newAppModal.cloudProviders.length > 1">
+        <div class="col-md-3 sm-label-left">Cloud Providers</div>
+        <div class="col-md-5">
+          <ui-select multiple ng-model="newAppModal.application.cloudProviders" class="form-control input-sm">
+            <ui-select-match>
+              {{$item}}
+            </ui-select-match>
+            <ui-select-choices repeat="provider in newAppModal.cloudProviders | filter: $select.search">
+              {{provider}}
+            </ui-select-choices>
+          </ui-select>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <div class="col-sm-3 sm-label-left">Instance Health</div>
+        <div class="col-sm-9 checkbox" style="margin-bottom: 0">
+          <label>
+            <input type="checkbox"
+                   ng-model="newAppModal.application.platformHealthOnly"
+                   id="applicationPlatformHealthOnly">
+            </input>
+            Consider only cloud provider health when executing tasks
+            <help-field key="application.platformHealthOnly"></help-field>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <div class="col-sm-3 sm-label-left"></div>
+        <div class="col-sm-9 checkbox" style="margin-top: 0">
+          <label>
+            <input type="checkbox"
+                   ng-model="newAppModal.application.platformHealthOnlyShowOverride"
+                   id="applicationPlatformHealthOnlyShowOverride">
+            </input>
+            Show health override option for each operation
+            <help-field key="application.showPlatformHealthOverride"></help-field>
+          </label>
+        </div>
+      </div>
+    </div>
 
     <div class="form-group row slide-in animated" ng-if="newAppModal.errorMsgs">
       <div class="col-sm-9 col-sm-offset-3 error-message" ng-repeat="errorMsg in newAppModal.errorMsgs">

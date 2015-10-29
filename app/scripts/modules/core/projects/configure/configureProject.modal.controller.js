@@ -5,8 +5,8 @@ let angular = require('angular');
 module.exports = angular.module('spinnaker.core.projects.configure.modal.controller', [
   require('../service/project.write.service.js'),
   require('../service/project.read.service.js'),
-  require('../../../core/account/account.service.js'),
-  require('../../../pipelines/config/services/pipelineConfigService.js'),
+  require('../../account/account.service.js'),
+  require('../../pipeline/config/services/pipelineConfigService.js'),
   require('exports?"infinite-scroll"!ng-infinite-scroll/build/ng-infinite-scroll.js'),
 ])
   .controller('ConfigureProjectModalCtrl', function ($scope, projectConfig, $modalInstance, $q,
@@ -22,6 +22,14 @@ module.exports = angular.module('spinnaker.core.projects.configure.modal.control
         clusters: []
       };
     }
+
+    projectConfig.config.clusters.forEach((cluster) => {
+      cluster.useAllApplications = !cluster.applications || !cluster.applications.length;
+    });
+
+    this.toggleClusterApplicationOverrides = (cluster) => {
+      cluster.applications = [];
+    };
 
     this.pages = {
       config: require('./projectConfig.modal.html'),
@@ -61,7 +69,7 @@ module.exports = angular.module('spinnaker.core.projects.configure.modal.control
     };
 
     this.addCluster = () => {
-      $scope.command.config.clusters.push({});
+      $scope.command.config.clusters.push({ stack: '*', detail: '*', useAllApplications: true});
     };
 
     this.removePipeline = (index) => {

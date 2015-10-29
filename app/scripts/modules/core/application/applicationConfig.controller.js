@@ -5,22 +5,27 @@ let angular = require('angular');
 module.exports = angular
   .module('spinnaker.config.controller', [
     require('./service/applications.write.service.js'),
-    require('../../confirmationModal/confirmationModal.service.js'),
+    require('../confirmationModal/confirmationModal.service.js'),
     require('../cache/cacheInitializer.js'),
     require('../cache/infrastructureCaches.js'),
-    require('../../utils/lodash.js'),
+    require('./modal/editApplication.controller.modal.js'),
   ])
-  .controller('ApplicationConfigController', function ($modal, $state, $log, applicationWriter, confirmationModalService,
-                                            cacheInitializer, infrastructureCaches, app, _) {
+  .controller('ApplicationConfigController', function ($uibModal, $state, $log, applicationWriter, confirmationModalService,
+                                            cacheInitializer, infrastructureCaches, app) {
     const application = app;
     var vm = this;
+
+    if (application.notFound) {
+      $state.go('home.infrastructure', null, {location: 'replace'});
+      return;
+    }
 
     vm.serverGroupCount = application.serverGroups.length;
     vm.hasServerGroups = Boolean(vm.serverGroupCount);
     vm.error = '';
 
     vm.editApplication = function () {
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('./modal/editApplication.html'),
         controller: 'EditApplicationController',
         controllerAs: 'editApp',
@@ -88,7 +93,5 @@ module.exports = angular
         }
       );
     };
-
-    return vm;
 
   }).name;

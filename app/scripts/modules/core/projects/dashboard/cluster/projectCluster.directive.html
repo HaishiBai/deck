@@ -11,14 +11,8 @@
               <a href ng-click="vm.refreshImmediately(); $event.stopPropagation()">
                 <span class="small glyphicon glyphicon-refresh refresh-enabled"
                       tooltip-placement="bottom"
-                      tooltip-html-unsafe="
-                        <p>{{vm.state.refreshing ? 'Cluster data is <strong>refreshing</strong>.'
-                        : '(click <span class=\'small glyphicon glyphicon-refresh\'></span> to refresh)'}}</p>
-                        <p>Last refresh: {{vm.state.lastRefresh | timestamp }} <br> ({{vm.state.lastRefresh | relativeTime }})</p>
-                        <p class='small'><strong>Note:</strong> Due to caching, data may be delayed up to 2 minutes</p>"
-                      ng-class="{
-                      'glyphicon-spinning': vm.state.refreshing,
-                      }"></span>
+                      uib-tooltip-template="vm.refreshTooltipTemplate"
+                      ng-class="{'glyphicon-spinning': vm.state.refreshing}"></span>
               </a>
 
               <span class="pull-right" ng-if="vm.state.loaded">
@@ -54,7 +48,7 @@
       <tbody>
       <tr ng-repeat="application in vm.clusterData.applications | orderBy: 'name'">
         <td>
-          <a class="heavy" href="{{application.url}}" ng-class="application.inconsistentBuilds ? 'text-warning' : ''">
+          <a class="heavy" ng-click="vm.clearFilters(application.metadata)" ng-href="{{application.metadata.href}}" ng-class="application.inconsistentBuilds ? 'text-warning' : ''">
             {{application.name | uppercase}}
           </a>
         </td>
@@ -64,7 +58,7 @@
           </a>
           <span ng-if="application.inconsistentBuilds"
                 class="glyphicon glyphicon-warning-sign text-warning"
-                tooltip="Some server groups are deployed with an older build."></span>
+                uib-tooltip="Some server groups are deployed with an older build."></span>
         </td>
         <td ng-if="!vm.state.loaded">
           <div class="text-center">
@@ -73,16 +67,17 @@
         </td>
         <td ng-repeat="region in vm.clusterData.regions">
           <span ng-if="application.regions[region]">
-            <a ng-href="{{application.regions[region].url}}">
+            <a  ng-click="vm.clearFilters(application.regions[region].metadata)" ng-href="{{application.regions[region].metadata.href}}">
               <health-counts container="application.regions[region].instanceCounts"
                              additional-legend-text="(Click to view cluster in this region)"
                              legend-placement="right"></health-counts>
-              <span class="text-warning"
-                    ng-if="application.inconsistentBuilds && application.regions[region].build.number !== application.build.number">
-                <span ng-if="application.regions[region].build.number > -1">(#{{application.regions[region].build.number}})</span>
-                <span ng-if="application.regions[region].build.number === -1">(N/A)</span>
-              </span>
             </a>
+            <span class="text-warning"
+                  ng-if="application.inconsistentBuilds && application.regions[region].build.number !== application.build.number">
+              <span ng-if="application.regions[region].build.number > -1">(#{{application.regions[region].build.number}})</span>
+              <span ng-if="application.regions[region].build.number === -1">(N/A)</span>
+            </span>
+
           </span>
           <span ng-if="!application.regions[region]">
             -

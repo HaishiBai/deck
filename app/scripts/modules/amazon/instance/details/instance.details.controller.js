@@ -5,16 +5,17 @@ let angular = require('angular');
 module.exports = angular.module('spinnaker.instance.detail.aws.controller', [
   require('angular-ui-router'),
   require('angular-ui-bootstrap'),
-  require('../../../utils/lodash.js'),
-  require('../../../instance/instance.write.service.js'),
-  require('../../../instance/instance.read.service.js'),
+  require('../../../core/utils/lodash.js'),
+  require('../../../core/instance/instance.write.service.js'),
+  require('../../../core/instance/instance.read.service.js'),
   require('../../vpc/vpcTag.directive.js'),
-  require('../../../confirmationModal/confirmationModal.service.js'),
-  require('../../../insight/insightFilterState.model.js'),
+  require('../../../core/confirmationModal/confirmationModal.service.js'),
+  require('../../../core/insight/insightFilterState.model.js'),
   require('../../../core/history/recentHistory.service.js'),
-  require('../../../utils/selectOnDblClick.directive.js'),
+  require('../../../core/utils/selectOnDblClick.directive.js'),
+  require('../../../core/config/settings.js')
 ])
-  .controller('awsInstanceDetailsCtrl', function ($scope, $state, $modal, InsightFilterStateModel,
+  .controller('awsInstanceDetailsCtrl', function ($scope, $state, $uibModal, InsightFilterStateModel, settings,
                                                instanceWriter, confirmationModalService, recentHistoryService,
                                                instanceReader, _, instance, app, $q) {
 
@@ -131,23 +132,28 @@ module.exports = angular.module('spinnaker.instance.detail.aws.controller', [
           var discoveryMetric = _.find($scope.healthMetrics, function(metric){ return metric.type === 'Discovery'; });
           if( discoveryMetric && discoveryMetric.vipAddress) {
             var vipList = discoveryMetric.vipAddress;
-            $scope.instance.vipAddress = vipList.contains(',') ? vipList.split(',') : [vipList];
+            let vipAddress = vipList.contains(',') ? vipList.split(',') : [vipList];
+            $scope.instance.vipAddress = _.uniq(vipAddress);
           }
           $scope.baseIpAddress = details.publicDnsName || details.privateIpAddress;
         },
-        function() {
-          // When an instance is first starting up, we may not have the details cached in oort yet, but we still
-          // want to let the user see what details we have
-          $scope.state.loading = false;
-          $state.go('^');
-        });
+          autoClose
+        );
       }
 
       if (!instanceSummary) {
-        $state.go('^');
+        autoClose();
       }
 
       return $q.when(null);
+    }
+
+    function autoClose() {
+      if ($scope.$$destroyed) {
+        return;
+      }
+      $state.params.allowModalToStayOpen = true;
+      $state.go('^', null, {location: 'replace'});
     }
 
     this.canDeregisterFromLoadBalancer = function() {
@@ -350,8 +356,8 @@ module.exports = angular.module('spinnaker.instance.detail.aws.controller', [
     };
 
     this.showConsoleOutput = function  () {
-      $modal.open({
-        templateUrl: require('../../../instance/details/console/consoleOutput.modal.html'),
+      $uibModal.open({
+        templateUrl: require('../../../core/instance/details/console/consoleOutput.modal.html'),
         controller: 'ConsoleOutputCtrl as ctrl',
         size: 'lg',
         resolve: {
@@ -369,6 +375,12 @@ module.exports = angular.module('spinnaker.instance.detail.aws.controller', [
     };
 
     retrieveInstance().then(() => app.registerAutoRefreshHandler(retrieveInstance, $scope));
+
+
+    this.getBastionAddressForAccount = function(account) {
+      let accountBastions = settings.providers.aws.accountBastions || {};
+      return accountBastions[account] || 'unknown';
+    };
 
     $scope.account = instance.account;
 

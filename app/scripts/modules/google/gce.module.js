@@ -2,6 +2,8 @@
 
 let angular = require('angular');
 
+require('./logo/gce.logo.less');
+
 module.exports = angular.module('spinnaker.gce', [
   require('../core/cloudProvider/cloudProvider.registry.js'),
   require('./serverGroup/details/serverGroupDetails.gce.controller.js'),
@@ -9,11 +11,14 @@ module.exports = angular.module('spinnaker.gce', [
   require('./serverGroup/configure/wizard/CloneServerGroupCtrl.js'),
   require('./serverGroup/configure/serverGroup.configure.gce.module.js'),
   require('./serverGroup/serverGroup.transformer.js'),
-  require('../network/network.module.js'),
-  require('../pipelines/config/stages/bake/docker/dockerBakeStage.js'),
-  require('../pipelines/config/stages/bake/gce/gceBakeStage.js'),
-  require('../pipelines/config/stages/destroyAsg/gce/gceDestroyAsgStage.js'),
-  require('../pipelines/config/stages/resizeAsg/gce/gceResizeAsgStage.js'),
+  require('../core/network/network.module.js'),
+  require('../core/pipeline/config/stages/bake/docker/dockerBakeStage.js'),
+  require('../core/pipeline/config/stages/bake/gce/gceBakeStage.js'),
+  require('../core/pipeline/config/stages/destroyAsg/gce/gceDestroyAsgStage.js'),
+  require('../core/pipeline/config/stages/disableAsg/gce/gceDisableAsgStage.js'),
+  require('../core/pipeline/config/stages/enableAsg/gce/gceEnableAsgStage.js'),
+  require('../core/pipeline/config/stages/findAmi/gce/gceFindAmiStage.js'),
+  require('../core/pipeline/config/stages/resizeAsg/gce/gceResizeAsgStage.js'),
   require('./instance/gceInstanceTypeService.js'),
   require('./loadBalancer/loadBalancer.transformer.js'),
   require('./loadBalancer/details/LoadBalancerDetailsCtrl.js'),
@@ -30,7 +35,7 @@ module.exports = angular.module('spinnaker.gce', [
   .config(function(cloudProviderRegistryProvider) {
     cloudProviderRegistryProvider.registerProvider('gce', {
       logo: {
-        path: require('./logo_gce.png'),
+        path: require('./logo/gce.logo.png'),
       },
       cache: {
         configurer: 'gceCacheConfigurer',

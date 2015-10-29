@@ -5,14 +5,13 @@ let angular = require('angular');
 module.exports = angular.module('spinnaker.aws.serverGroupCommandBuilder.service', [
   require('exports?"restangular"!imports?_=lodash!restangular'),
   require('../../../core/account/account.service.js'),
-  require('../../../diff/diff.service.js'),
   require('../../subnet/subnet.read.service.js'),
-  require('../../../instance/instanceTypeService.js'),
+  require('../../../core/instance/instanceTypeService.js'),
   require('../../../core/naming/naming.service.js'),
   require('./serverGroupConfiguration.service.js'),
-  require('../../../utils/lodash.js'),
+  require('../../../core/utils/lodash.js'),
 ])
-  .factory('awsServerGroupCommandBuilder', function (settings, Restangular, $exceptionHandler, $q, diffService,
+  .factory('awsServerGroupCommandBuilder', function (settings, Restangular, $q,
                                                      accountService, subnetReader, namingService, instanceTypeService,
                                                      awsServerGroupConfigurationService, _) {
 
@@ -25,15 +24,9 @@ module.exports = angular.module('spinnaker.aws.serverGroupCommandBuilder.service
 
       var preferredZonesLoader = accountService.getAvailabilityZonesForAccountAndRegion('aws', defaultCredentials, defaultRegion);
 
-      var clusterDiffLoader = function() { return []; };
-      if (application.name) {
-        clusterDiffLoader = diffService.getClusterDiffForAccount(defaultCredentials, application.name);
-      }
-
       return $q.all({
         preferredZones: preferredZonesLoader,
         regionsKeyedByAccount: regionsKeyedByAccountLoader,
-        clusterDiff: clusterDiffLoader,
       })
         .then(function (asyncData) {
           var availabilityZones = asyncData.preferredZones;
@@ -41,7 +34,7 @@ module.exports = angular.module('spinnaker.aws.serverGroupCommandBuilder.service
           var regions = asyncData.regionsKeyedByAccount[defaultCredentials];
           var keyPair = regions ? regions.defaultKeyPair : null;
 
-          return {
+          var command = {
             application: application.name,
             credentials: defaultCredentials,
             region: defaultRegion,
@@ -74,9 +67,14 @@ module.exports = angular.module('spinnaker.aws.serverGroupCommandBuilder.service
               usePreferredZones: true,
               mode: defaults.mode || 'create',
               disableStrategySelection: true,
-              clusterDiff: asyncData.clusterDiff,
             },
           };
+
+          if (application && application.attributes && application.attributes.platformHealthOnly) {
+            command.interestingHealthProviderNames = ['Amazon'];
+          }
+
+          return command;
         });
     }
 
@@ -149,8 +147,6 @@ module.exports = angular.module('spinnaker.aws.serverGroupCommandBuilder.service
       var subnetsLoader = subnetReader.listSubnets();
 
       var serverGroupName = namingService.parseServerGroupName(serverGroup.asg.autoScalingGroupName);
-      var clusterName = namingService.getClusterName(application.name, serverGroupName.stack, serverGroupName.freeFormDetails);
-      var clusterDiffLoader = diffService.getClusterDiffForAccount(serverGroup.account, clusterName);
 
       var instanceType = serverGroup.launchConfig ? serverGroup.launchConfig.instanceType : null;
       var instanceTypeCategoryLoader = instanceTypeService.getCategoryForInstanceType('aws', instanceType);
@@ -159,7 +155,6 @@ module.exports = angular.module('spinnaker.aws.serverGroupCommandBuilder.service
         preferredZones: preferredZonesLoader,
         subnets: subnetsLoader,
         instanceProfile: instanceTypeCategoryLoader,
-        clusterDiff: clusterDiffLoader,
       });
 
       return asyncLoader.then(function(asyncData) {
@@ -206,9 +201,12 @@ module.exports = angular.module('spinnaker.aws.serverGroupCommandBuilder.service
             usePreferredZones: usePreferredZones,
             mode: mode,
             isNew: false,
-            clusterDiff: asyncData.clusterDiff,
           },
         };
+
+        if (application && application.attributes && application.attributes.platformHealthOnly) {
+          command.interestingHealthProviderNames = ['Amazon'];
+        }
 
         if (mode === 'clone') {
           command.useSourceCapacity = true;

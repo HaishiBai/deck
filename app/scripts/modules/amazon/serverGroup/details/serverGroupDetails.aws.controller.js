@@ -6,26 +6,27 @@ require('../configure/serverGroup.configure.aws.module.js');
 let angular = require('angular');
 
 module.exports = angular.module('spinnaker.serverGroup.details.aws.controller', [
-  require('../../../confirmationModal/confirmationModal.service.js'),
-  require('../../../serverGroups/serverGroup.write.service.js'),
-  require('../../../utils/lodash.js'),
+  require('../../../core/application/modal/platformHealthOverride.directive.js'),
+  require('../../../core/confirmationModal/confirmationModal.service.js'),
+  require('../../../core/serverGroup/serverGroup.write.service.js'),
+  require('../../../core/utils/lodash.js'),
   require('../../vpc/vpcTag.directive.js'),
   require('./scalingProcesses/autoScalingProcess.service.js'),
-  require('../../../serverGroups/serverGroup.read.service.js'),
+  require('../../../core/serverGroup/serverGroup.read.service.js'),
   require('../configure/serverGroupCommandBuilder.service.js'),
-  require('../../../serverGroups/configure/common/runningExecutions.service.js'),
+  require('../../../core/serverGroup/configure/common/runningExecutions.service.js'),
   require('../../../netflix/migrator/serverGroup/serverGroup.migrator.directive.js'), // TODO: make actions pluggable
   require('./scalingPolicy/scalingPolicy.directive.js'),
   require('./scheduledAction/scheduledAction.directive.js'),
-  require('../../../insight/insightFilterState.model.js'),
+  require('../../../core/insight/insightFilterState.model.js'),
   require('./scalingActivities/scalingActivities.controller.js'),
   require('./networking/networking.module.js'),
   require('./resize/resizeServerGroup.controller'),
-  require('../../../utils/selectOnDblClick.directive.js'),
+  require('../../../core/utils/selectOnDblClick.directive.js'),
 ])
-  .controller('awsServerGroupDetailsCtrl', function ($scope, $state, $templateCache, $compile, app, serverGroup, InsightFilterStateModel,
-                                                     serverGroupReader, awsServerGroupCommandBuilder, $modal, confirmationModalService, _, serverGroupWriter,
-                                                     subnetReader, autoScalingProcessService, executionFilterService) {
+  .controller('awsServerGroupDetailsCtrl', function ($scope, $state, $templateCache, $interpolate, app, serverGroup, InsightFilterStateModel,
+                                                     serverGroupReader, awsServerGroupCommandBuilder, $uibModal, confirmationModalService, _, serverGroupWriter,
+                                                     subnetReader, autoScalingProcessService, runningExecutionsService) {
 
     $scope.state = {
       loading: true
@@ -38,14 +39,20 @@ module.exports = angular.module('spinnaker.serverGroup.details.aws.controller', 
       if (!$scope.serverGroup.asg || !$scope.serverGroup.asg.suspendedProcesses) {
         return;
       }
-      var disabled = _.pluck($scope.serverGroup.asg.suspendedProcesses, 'processName');
+      var disabled = $scope.serverGroup.asg.suspendedProcesses;
       var allProcesses = autoScalingProcessService.listProcesses();
       allProcesses.forEach(function(process) {
-        $scope.autoScalingProcesses.push({
+        let disabledProcess = _.find(disabled, {processName: process.name});
+        let scalingProcess = {
           name: process.name,
-          enabled: disabled.indexOf(process.name) === -1,
+          enabled: !disabledProcess,
           description: process.description,
-        });
+        };
+        if (disabledProcess) {
+          let suspensionDate = disabledProcess.suspensionReason.replace('User suspended at ', '');
+          scalingProcess.suspensionDate = new Date(suspensionDate).getTime();
+        }
+        $scope.autoScalingProcesses.push(scalingProcess);
       });
     }
 
@@ -78,7 +85,7 @@ module.exports = angular.module('spinnaker.serverGroup.details.aws.controller', 
 
         $scope.serverGroup = restangularlessDetails;
         $scope.runningExecutions = function() {
-          return executionFilterService.filterRunningExecutions($scope.serverGroup.executions);
+          return runningExecutionsService.filterRunningExecutions($scope.serverGroup.executions);
         };
 
         if (!_.isEmpty($scope.serverGroup)) {
@@ -115,9 +122,19 @@ module.exports = angular.module('spinnaker.serverGroup.details.aws.controller', 
           applyAutoScalingProcesses();
 
         } else {
-          $state.go('^');
+          autoClose();
         }
-      });
+      },
+        autoClose
+      );
+    }
+
+    function autoClose() {
+      if ($scope.$$destroyed) {
+        return;
+      }
+      $state.params.allowModalToStayOpen = true;
+      $state.go('^', null, {location: 'replace'});
     }
 
     function cancelLoader() {
@@ -172,9 +189,8 @@ module.exports = angular.module('spinnaker.serverGroup.details.aws.controller', 
 
     this.getBodyTemplate = function(serverGroup, app) {
       if(this.isLastServerGroupInRegion(serverGroup, app)){
-        var template = $templateCache.get(require('../../../serverGroups/details/deleteLastServerGroupWarning.html'));
-        $scope.deletingServerGroup = serverGroup;
-        return $compile(template)($scope);
+        var template = $templateCache.get(require('../../../core/serverGroup/details/deleteLastServerGroupWarning.html'));
+        return $interpolate(template)({deletingServerGroup: serverGroup});
       }
     };
 
@@ -195,20 +211,29 @@ module.exports = angular.module('spinnaker.serverGroup.details.aws.controller', 
         title: 'Disabling ' + serverGroup.name
       };
 
-      var submitMethod = function () {
-        return serverGroupWriter.disableServerGroup(serverGroup, app);
+      var submitMethod = function(interestingHealthProviderNames) {
+        return serverGroupWriter.disableServerGroup(serverGroup, app, {
+          interestingHealthProviderNames: interestingHealthProviderNames,
+        });
       };
 
-      confirmationModalService.confirm({
+      var confirmationModalParams = {
         header: 'Really disable ' + serverGroup.name + '?',
         buttonText: 'Disable ' + serverGroup.name,
         destructive: true,
         account: serverGroup.account,
         provider: 'aws',
         taskMonitorConfig: taskMonitor,
-        submitMethod: submitMethod
-      });
+        platformHealthOnlyShowOverride: app.attributes.platformHealthOnlyShowOverride,
+        platformHealthType: 'Amazon',
+        submitMethod: submitMethod,
+      };
 
+      if (app.attributes.platformHealthOnly) {
+        confirmationModalParams.interestingHealthProviderNames = ['Amazon'];
+      }
+
+      confirmationModalService.confirm(confirmationModalParams);
     };
 
     this.enableServerGroup = function enableServerGroup() {
@@ -219,23 +244,32 @@ module.exports = angular.module('spinnaker.serverGroup.details.aws.controller', 
         title: 'Enabling ' + serverGroup.name,
       };
 
-      var submitMethod = function () {
-        return serverGroupWriter.enableServerGroup(serverGroup, app);
+      var submitMethod = function(interestingHealthProviderNames) {
+        return serverGroupWriter.enableServerGroup(serverGroup, app, {
+          interestingHealthProviderNames: interestingHealthProviderNames,
+        });
       };
 
-      confirmationModalService.confirm({
+      var confirmationModalParams = {
         header: 'Really enable ' + serverGroup.name + '?',
         buttonText: 'Enable ' + serverGroup.name,
         destructive: false,
         account: serverGroup.account,
         taskMonitorConfig: taskMonitor,
-        submitMethod: submitMethod
-      });
+        platformHealthOnlyShowOverride: app.attributes.platformHealthOnlyShowOverride,
+        platformHealthType: 'Amazon',
+        submitMethod: submitMethod,
+      };
 
+      if (app.attributes.platformHealthOnly) {
+        confirmationModalParams.interestingHealthProviderNames = ['Amazon'];
+      }
+
+      confirmationModalService.confirm(confirmationModalParams);
     };
 
     this.toggleScalingProcesses = function toggleScalingProcesses() {
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('./scalingProcesses/modifyScalingProcesses.html'),
         controller: 'ModifyScalingProcessesCtrl as ctrl',
         resolve: {
@@ -247,7 +281,7 @@ module.exports = angular.module('spinnaker.serverGroup.details.aws.controller', 
     };
 
     this.resizeServerGroup = function resizeServerGroup() {
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('./resize/resizeServerGroup.html'),
         controller: 'awsResizeServerGroupCtrl as ctrl',
         resolve: {
@@ -258,7 +292,7 @@ module.exports = angular.module('spinnaker.serverGroup.details.aws.controller', 
     };
 
     this.cloneServerGroup = function cloneServerGroup(serverGroup) {
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('../configure/wizard/serverGroupWizard.html'),
         controller: 'awsCloneServerGroupCtrl as ctrl',
         resolve: {
@@ -271,7 +305,7 @@ module.exports = angular.module('spinnaker.serverGroup.details.aws.controller', 
 
     this.showScalingActivities = function showScalingActivities() {
       $scope.activities = [];
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('./scalingActivities/scalingActivities.html'),
         controller: 'ScalingActivitiesCtrl as ctrl',
         resolve: {
@@ -285,8 +319,8 @@ module.exports = angular.module('spinnaker.serverGroup.details.aws.controller', 
 
     this.showUserData = function showScalingActivities() {
       $scope.userData = window.atob($scope.serverGroup.launchConfig.userData);
-      $modal.open({
-        templateUrl: require('../../../serverGroups/details/userData.html'),
+      $uibModal.open({
+        templateUrl: require('../../../core/serverGroup/details/userData.html'),
         controller: 'CloseableModalCtrl',
         scope: $scope
       });
@@ -301,7 +335,7 @@ module.exports = angular.module('spinnaker.serverGroup.details.aws.controller', 
     };
 
     this.editScheduledActions = function () {
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('./scheduledAction/editScheduledActions.modal.html'),
         controller: 'EditScheduledActionsCtrl as ctrl',
         resolve: {
@@ -312,7 +346,7 @@ module.exports = angular.module('spinnaker.serverGroup.details.aws.controller', 
     };
 
     this.editAdvancedSettings = function () {
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('./advancedSettings/editAsgAdvancedSettings.modal.html'),
         controller: 'EditAsgAdvancedSettingsCtrl as ctrl',
         resolve: {

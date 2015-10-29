@@ -4,13 +4,13 @@ let angular = require('angular');
 
 module.exports = angular.module('spinnaker.applications.controller', [
   require('./service/applications.read.service.js'),
-  require('../../core/account/account.service.js'),
+  require('../account/account.service.js'),
   require('../presentation/anyFieldFilter/anyField.filter.js'),
   require('../cache/viewStateCache.js'),
   require('../presentation/sortToggle/sorttoggle.directive.js'),
-  require('../../insight/insightmenu.directive.js'),
+  require('../insight/insightmenu.directive.js'),
 ])
-  .controller('ApplicationsCtrl', function($scope, $exceptionHandler, $modal, $log, $filter, accountService,
+  .controller('ApplicationsCtrl', function($scope, $uibModal, $log, $filter, accountService,
                                            $state, applicationReader, viewStateCache) {
 
     var applicationsViewStateCache = viewStateCache.applications || viewStateCache.createCache('applications', { version: 1 });
@@ -46,7 +46,7 @@ module.exports = angular.module('spinnaker.applications.controller', [
       {
         displayName: 'Create Application',
         action: function() {
-          $modal.open({
+          $uibModal.open({
             scope: $scope,
             templateUrl: require('./modal/newapplication.html'),
             controller: 'CreateApplicationModalCtrl',
@@ -96,20 +96,11 @@ module.exports = angular.module('spinnaker.applications.controller', [
       }
     }
 
-    // Get from cache first
     applicationReader.listApplications().then(function(applications) {
       applications.forEach(fixAccount);
       $scope.applications = applications;
       ctrl.filterApplications();
       $scope.applicationsLoaded = true;
-
-      // Then get from server
-      applicationReader.listApplications(true).then(function(applications) {
-        applications.forEach(fixAccount);
-        $scope.applications = applications;
-        ctrl.filterApplications();
-      });
-
     });
 
     $scope.$watch('viewState', cacheViewState, true);

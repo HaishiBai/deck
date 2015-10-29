@@ -3,23 +3,22 @@
 let angular = require('angular');
 
 module.exports = angular.module('spinnaker.core.cache.initializer', [
-  require('../../core/account/account.service.js'),
-  require('../../network/network.read.service.js'),
-  require('../../securityGroups/securityGroup.read.service.js'),
-  require('../../core/application/service/applications.read.service.js'),
-  require('../../jenkins/igor.service.js'),
+  require('../account/account.service.js'),
+  require('../network/network.read.service.js'),
+  require('../securityGroup/securityGroup.read.service.js'),
+  require('../application/service/applications.read.service.js'),
+  require('../ci/jenkins/igor.service.js'),
   require('./infrastructureCaches.js'),
   require('./infrastructureCacheConfig.js'),
-  require('../../utils/lodash.js'),
+  require('../utils/lodash.js'),
   require('../cloudProvider/cloudProvider.registry.js'),
 ])
   .factory('cacheInitializer', function ($q, applicationReader, infrastructureCaches,
                                          accountService, securityGroupReader, cloudProviderRegistry,
-                                         igorService, infrastructureCacheConfig, serviceDelegate, networkReader, _) {
+                                         igorService, infrastructureCacheConfig, serviceDelegate, _) {
 
     var initializers = {
       credentials: [accountService.listAccounts],
-      networks: [networkReader.listNetworks],
       securityGroups: [securityGroupReader.getAllSecurityGroups],
       applications: [applicationReader.listApplications],
       buildMasters: [igorService.listMasters],
@@ -31,6 +30,7 @@ module.exports = angular.module('spinnaker.core.cache.initializer', [
       config.version = config.version || 1;
       config.maxAge = config.maxAge || 2 * 24 * 60 * 60 * 1000;
       config.initializers = config.initializers || initializers[key] || [];
+      config.onReset = config.onReset || [angular.noop];
     }
 
     function extendConfig() {
@@ -38,17 +38,17 @@ module.exports = angular.module('spinnaker.core.cache.initializer', [
         setConfigDefaults(key, cacheConfig[key]);
       });
       cloudProviderRegistry.listRegisteredProviders().forEach((provider) => {
-        let providerConfig = serviceDelegate.getDelegate(provider, 'cache.configurer');
-        if (providerConfig) {
+        if (serviceDelegate.hasDelegate(provider, 'cache.configurer')) {
+          let providerConfig = serviceDelegate.getDelegate(provider, 'cache.configurer');
           Object.keys(providerConfig).forEach(function(key) {
             setConfigDefaults(key, providerConfig[key]);
             if (!cacheConfig[key]) {
               cacheConfig[key] = providerConfig[key];
             }
             cacheConfig[key].initializers = _.uniq((cacheConfig[key].initializers).concat(providerConfig[key].initializers));
+            cacheConfig[key].onReset = _.uniq((cacheConfig[key].onReset).concat(providerConfig[key].onReset));
             cacheConfig[key].version = Math.max(cacheConfig[key].version, providerConfig[key].version);
             cacheConfig[key].maxAge = Math.min(cacheConfig[key].maxAge, providerConfig[key].maxAge);
-
           });
         }
       });

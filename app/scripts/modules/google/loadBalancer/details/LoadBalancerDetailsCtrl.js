@@ -4,15 +4,15 @@ let angular = require('angular');
 
 module.exports = angular.module('spinnaker.loadBalancer.gce.details.controller', [
   require('angular-ui-router'),
-  require('../../../confirmationModal/confirmationModal.service.js'),
-  require('../../../loadBalancers/loadBalancer.write.service.js'),
-  require('../../../loadBalancers/loadBalancer.read.service.js'),
-  require('../../../utils/lodash.js'),
-  require('../../../confirmationModal/confirmationModal.service.js'),
-  require('../../../insight/insightFilterState.model.js'),
-  require('../../../utils/selectOnDblClick.directive.js'),
+  require('../../../core/confirmationModal/confirmationModal.service.js'),
+  require('../../../core/loadBalancer/loadBalancer.write.service.js'),
+  require('../../../core/loadBalancer/loadBalancer.read.service.js'),
+  require('../../../core/utils/lodash.js'),
+  require('../../../core/confirmationModal/confirmationModal.service.js'),
+  require('../../../core/insight/insightFilterState.model.js'),
+  require('../../../core/utils/selectOnDblClick.directive.js'),
 ])
-  .controller('gceLoadBalancerDetailsCtrl', function ($scope, $state, $exceptionHandler, $modal, loadBalancer, app, InsightFilterStateModel,
+  .controller('gceLoadBalancerDetailsCtrl', function ($scope, $state, $uibModal, loadBalancer, app, InsightFilterStateModel,
                                                       _, confirmationModalService, accountService, loadBalancerWriter, loadBalancerReader, $q) {
 
     let application = app;
@@ -48,18 +48,28 @@ module.exports = angular.module('spinnaker.loadBalancer.gce.details.controller',
             $scope.loadBalancer.logsLink =
               'https://console.developers.google.com/project/' + accountDetails.projectName + '/logs?service=compute.googleapis.com&minLogLevel=0&filters=text:' + $scope.loadBalancer.name;
           });
-        });
+        },
+          autoClose
+        );
       }
       if (!$scope.loadBalancer) {
-        $state.go('^');
+        autoClose();
       }
       return $q.when(null);
+    }
+
+    function autoClose() {
+      if ($scope.$$destroyed) {
+        return;
+      }
+      $state.params.allowModalToStayOpen = true;
+      $state.go('^', null, {location: 'replace'});
     }
 
     extractLoadBalancer().then(() => application.registerAutoRefreshHandler(extractLoadBalancer, $scope));
 
     this.editLoadBalancer = function editLoadBalancer() {
-      $modal.open({
+      $uibModal.open({
         templateUrl: require('../configure/editLoadBalancer.html'),
         controller: 'gceCreateLoadBalancerCtrl as ctrl',
         resolve: {

@@ -5,26 +5,32 @@ let angular = require('angular');
 
 module.exports = angular
   .module('spinnaker.vpc.read.service', [
-    require('exports?"restangular"!imports?_=lodash!restangular'),
-    require('../../utils/lodash.js'),
-    require('../../core/cache/infrastructureCaches.js')
+    require('../../core/network/network.read.service.js')
   ])
-  .factory('vpcReader', function ($q, Restangular, infrastructureCaches ) {
+  .factory('vpcReader', function ($q, networkReader) {
+
+    let cachedVpcs = null;
 
     function listVpcs() {
-      return Restangular.all('vpcs')
-        .withHttpConfig({cache: infrastructureCaches.vpcs})
-        .getList()
-        .then(function(vpcs) {
-          return vpcs.map(function(vpc) {
-            vpc.label = vpc.name;
-            vpc.deprecated = !!vpc.deprecated;
-            if (vpc.deprecated) {
-              vpc.label += ' (deprecated)';
-            }
-            return vpc.plain();
-          });
+      if (cachedVpcs) {
+        return $q.when(cachedVpcs);
+      }
+      return networkReader.listNetworksByProvider('aws').then(function(vpcs) {
+        let results = vpcs.map(function(vpc) {
+          vpc.label = vpc.name;
+          vpc.deprecated = !!vpc.deprecated;
+          if (vpc.deprecated) {
+            vpc.label += ' (deprecated)';
+          }
+          return vpc.plain();
         });
+        cachedVpcs = results;
+        return results;
+      });
+    }
+
+    function resetCache() {
+      cachedVpcs = null;
     }
 
     function getVpcName(id) {
@@ -39,6 +45,7 @@ module.exports = angular
     return {
       listVpcs: listVpcs,
       getVpcName: getVpcName,
+      resetCache: resetCache,
     };
 
   }).name;

@@ -8,6 +8,7 @@ let authEndpoint = process.env.AUTH_ENDPOINT || 'spinnaker-api-prestaging.prod.n
 let protocol = process.env.PROTOCOL || 'https';
 
 window.spinnakerSettings = {
+  defaultProviders: ['aws'],
   feedbackUrl: feedbackUrl,
   gateUrl: `${protocol}://${gateHost}`,
   bakeryDetailUrl: bakeryDetailUrl,
@@ -45,6 +46,13 @@ window.spinnakerSettings = {
       primaryAccounts: ['prod', 'test'],
       primaryRegions: ['eu-west-1', 'us-east-1', 'us-west-1', 'us-west-2'],
       challengeDestructiveActions: ['mgmt', 'prod', 'mceprod', 'cpl'],
+      accountBastions : {
+        'prod': 'aws.prod.netflix.net',
+        'test': 'aws.test.netflix.net',
+        'mgmt': 'aws.mgmt.netflix.net',
+        'mcetest': 'awsmce.test.netflix.net',
+        'mceprod': 'awsmce.prod.netflix.net',
+      },
       preferredZonesByAccount: {
         prod: {
           'us-east-1': ['us-east-1c', 'us-east-1d', 'us-east-1e'],
@@ -117,6 +125,14 @@ window.spinnakerSettings = {
           'sa-east-1': ['sa-east-1a', 'sa-east-1b']
         }
       }
+    },
+    titan: {
+      defaults: {
+        account: 'titantest',
+        region: 'us-east-1'
+      },
+      primaryAccounts: ['test'],
+      primaryRegions: ['us-east-1'],
     }
   },
   whatsNew: {
