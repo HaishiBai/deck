@@ -77,7 +77,7 @@ module.exports = angular.module('spinnaker', [
     require('./modules/google/gce.module.js'),
     require('./modules/cloudfoundry/cf.module.js'),
     require('./modules/titan/titan.module.js'),
-    require('./modules/azure/azure.module.js'),
+    // require('./modules/azure/azure.module.js'),
     require('./modules/core/utils/utils.module.js'),
     require('./modules/core/cache/caches.module.js'),
     require('./modules/core/naming/naming.service.js'),
