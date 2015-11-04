@@ -6,22 +6,22 @@ require('../configure/serverGroup.configure.azure.module.js');
 let angular = require('angular');
 
 module.exports = angular.module('spinnaker.serverGroup.details.azure.controller', [
-  require('../../../confirmationModal/confirmationModal.service.js'),
-  require('../../../serverGroups/serverGroup.write.service.js'),
-  require('../../../utils/lodash.js'),
+  require('../../../core/confirmationModal/confirmationModal.service.js'),
+  require('../../../core/serverGroup/serverGroup.write.service.js'),
+  require('../../../core/utils/lodash.js'),
   require('../../vpc/vpcTag.directive.js'),
   require('./scalingProcesses/autoScalingProcess.service.js'),
-  require('../../../serverGroups/serverGroup.read.service.js'),
+  require('../../../core/serverGroup/serverGroup.read.service.js'),
   require('../configure/serverGroupCommandBuilder.service.js'),
-  require('../../../serverGroups/configure/common/runningExecutions.service.js'),
+  require('../../../core/serverGroup/configure/common/runningExecutions.service.js'),
   require('../../../netflix/migrator/serverGroup/serverGroup.migrator.directive.js'), // TODO: make actions pluggable
   require('./scalingPolicy/scalingPolicy.directive.js'),
   require('./scheduledAction/scheduledAction.directive.js'),
-  require('../../../insight/insightFilterState.model.js'),
+  require('../../../core/insight/insightFilterState.model.js'),
   require('./scalingActivities/scalingActivities.controller.js'),
   require('./networking/networking.module.js'),
   require('./resize/resizeServerGroup.controller'),
-  require('../../../utils/selectOnDblClick.directive.js'),
+  require('../../../core/utils/selectOnDblClick.directive.js'),
 ])
   .controller('azureServerGroupDetailsCtrl', function ($scope, $state, $templateCache, $compile, app, serverGroup, InsightFilterStateModel,
                                                      serverGroupReader, azureServerGroupCommandBuilder, $modal, confirmationModalService, _, serverGroupWriter,
@@ -172,7 +172,7 @@ module.exports = angular.module('spinnaker.serverGroup.details.azure.controller'
 
     this.getBodyTemplate = function(serverGroup, app) {
       if(this.isLastServerGroupInRegion(serverGroup, app)){
-        var template = $templateCache.get(require('../../../serverGroups/details/deleteLastServerGroupWarning.html'));
+        var template = $templateCache.get(require('../../../core/serverGroup/details/deleteLastServerGroupWarning.html'));
         $scope.deletingServerGroup = serverGroup;
         return $compile(template)($scope);
       }
@@ -286,7 +286,7 @@ module.exports = angular.module('spinnaker.serverGroup.details.azure.controller'
     this.showUserData = function showScalingActivities() {
       $scope.userData = window.atob($scope.serverGroup.launchConfig.userData);
       $modal.open({
-        templateUrl: require('../../../serverGroups/details/userData.html'),
+        templateUrl: require('../../../core/serverGroup/details/userData.html'),
         controller: 'CloseableModalCtrl',
         scope: $scope
       });

@@ -4,8 +4,8 @@ let angular = require('angular');
 
 module.exports = angular.module('spinnaker.amazon.serverGroup.details.resize.controller', [
   require('../../../../core/account/account.service.js'),
-  require('../../../../serverGroups/serverGroup.write.service.js'),
-  require('../../../../tasks/monitor/taskMonitorService.js')
+  require('../../../../core/serverGroup/serverGroup.write.service.js'),
+  require('../../../../core/task/monitor/taskMonitorService.js')
 ])
   .controller('azureResizeServerGroupCtrl', function($scope, $modalInstance, accountService, serverGroupWriter, taskMonitorService,
                                                 application, serverGroup) {

@@ -4,14 +4,14 @@ let angular = require('angular');
 
 module.exports = angular.module('spinnaker.loadBalancer.azure.details.controller', [
   require('angular-ui-router'),
-  require('../../../securityGroups/securityGroup.read.service.js'),
-  require('../../../loadBalancers/loadBalancer.write.service.js'),
-  require('../../../loadBalancers/loadBalancer.read.service.js'),
-  require('../../../utils/lodash.js'),
-  require('../../../confirmationModal/confirmationModal.service.js'),
-  require('../../../insight/insightFilterState.model.js'),
+  require('../../../core/securityGroup/securityGroup.read.service.js'),
+  require('../../../core/loadBalancer/loadBalancer.write.service.js'),
+  require('../../../core/loadBalancer/loadBalancer.read.service.js'),
+  require('../../../core/utils/lodash.js'),
+  require('../../../core/confirmationModal/confirmationModal.service.js'),
+  require('../../../core/insight/insightFilterState.model.js'),
   require('../../../core/presentation/collapsibleSection/collapsibleSection.directive.js'),
-  require('../../../utils/selectOnDblClick.directive.js'),
+  require('../../../core/utils/selectOnDblClick.directive.js'),
 ])
   .controller('azureLoadBalancerDetailsCtrl', function ($scope, $state, $exceptionHandler, $modal, loadBalancer, app, InsightFilterStateModel,
                                                    securityGroupReader, _, confirmationModalService, loadBalancerWriter, loadBalancerReader, $q) {

@@ -3,7 +3,7 @@
 let angular = require('angular');
 
 module.exports = angular.module('spinnaker.azure.instance.details.scheduledAction.directive', [
-  require('../../../../insight/insightFilterState.model.js'),
+  require('../../../../core/insight/insightFilterState.model.js'),
 ])
   .directive('scheduledAction', function(InsightFilterStateModel) {
     return {

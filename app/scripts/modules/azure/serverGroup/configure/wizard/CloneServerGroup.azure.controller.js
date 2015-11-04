@@ -4,10 +4,10 @@ let angular = require('angular');
 
 module.exports = angular.module('spinnaker.azure.cloneServerGroup.controller', [
   require('angular-ui-router'),
-  require('../../../../utils/lodash.js'),
+  require('../../../../core/utils/lodash.js'),
   require('../serverGroupConfiguration.service.js'),
-  require('../../../../serverGroups/serverGroup.write.service.js'),
-  require('../../../../tasks/monitor/taskMonitorService.js'),
+  require('../../../../core/serverGroup/serverGroup.write.service.js'),
+  require('../../../../core/task/monitor/taskMonitorService.js'),
   require('../../../../core/modal/wizard/modalWizard.service.js'),
 ])
   .controller('azureCloneServerGroupCtrl', function($scope, $modalInstance, _, $q, $exceptionHandler, $state,

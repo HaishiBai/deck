@@ -4,8 +4,8 @@ let angular = require('angular');
 
 module.exports = angular
   .module('spinnaker.serverGroup.configure.azure.azureServerGroupBasicSettingsSelector', [
-    require('../../../serverGroups/configure/common/basicSettingsMixin.controller.js'),
-    require('../../../region/regionSelectField.directive.js'),
+    require('../../../core/serverGroup/configure/common/basicSettingsMixin.controller.js'),
+    require('../../../core/region/regionSelectField.directive.js'),
     require('../../../core/account/accountSelectField.directive.js'),
     require('../../subnet/subnetSelectField.directive.js'),
   ])
