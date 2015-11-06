@@ -37,8 +37,7 @@ module.exports = angular
       } else {
         loadBalancer.healthCheck = loadBalancer.healthCheckProtocol + ':' + loadBalancer.healthCheckPort;
       }
-//      loadBalancer.type = 'upsertAmazonLoadBalancer';
-      loadBalancer.type = 'upsertAzureLoadBalancer';
+      loadBalancer.type = 'upsertAmazonLoadBalancer';
       loadBalancer.availabilityZones = {};
       loadBalancer.availabilityZones[loadBalancer.region] = loadBalancer.regionZones || [];
       if (!loadBalancer.vpcId && !loadBalancer.subnetType) {
