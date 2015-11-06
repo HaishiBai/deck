@@ -60,13 +60,13 @@
       </div>
     </div>
 
-    <load-balancer-availability-zone-selector
+    <azure-load-balancer-availability-zone-selector
       model="loadBalancer"
       region="loadBalancer.region"
       availability-zones="availabilityZones"
       use-preferred-zones="loadBalancer.usePreferredZones"
       provider="'azure'" >
-    </load-balancer-availability-zone-selector>
+    </azure-load-balancer-availability-zone-selector>
 
     <subnet-select-field label-columns="3" help-key="azure.loadBalancer.subnet" component="loadBalancer" field="subnetType" region="loadBalancer.region" subnets="subnets" on-change="ctrl.subnetUpdated()"></subnet-select-field>
   </div>
@@ -77,7 +77,6 @@
     <submit-button is-disabled="form.$invalid || !state.accountsLoaded || taskMonitor.submitting"
              submitting="taskMonitor.submitting" on-click="ctrl.submit()" is-new="isNew"></submit-button>
     <button class="btn btn-primary"
-            ng-disabled="form.$invalid || loadBalancer.regionZones.length === 0"
             ng-click="wizard.markComplete('Location'); wizard.nextPage()">
       Next <span class="glyphicon glyphicon-chevron-right"></span>
     </button>

@@ -11,15 +11,15 @@ module.exports = angular.module('spinnaker.core.account.service', [
 ])
   .factory('accountService', function(settings, _, Restangular, $q, infrastructureCaches, cloudProviderRegistry) {
 
-    function getPreferredZonesByAccount(providerName='aws') {
+    function getPreferredZonesByAccount(providerName) {
       return $q.when(settings.providers[providerName].preferredZonesByAccount);
     }
 
     function getAvailabilityZonesForAccountAndRegion(providerName, accountName, regionName) {
 	console.log('-------------------------------' + providerName + ':' + accountName + ':' + regionName + '------------');
-	if (providerName === 'azure') {
-		return [regionName];
-	}
+	//if (providerName === 'azure') {
+	//	return null;
+	//}
       return getPreferredZonesByAccount(providerName).then( function(defaults) {
         if (defaults[accountName] && defaults[accountName][regionName]) {
           return {preferredZones: defaults[accountName][regionName]};
@@ -31,7 +31,8 @@ module.exports = angular.module('spinnaker.core.account.service', [
       })
       .then(function(zonesCollection) {
         return getRegionsForAccount(accountName).then(function(regions){
-          zonesCollection.actualZones = _.find(regions, {name: regionName}).availabilityZones;
+          // zonesCollection.actualZones = _.find(regions, {name: regionName}).availabilityZones;
+          zonesCollection.actualZones = [regionName];
           return zonesCollection;
         });
       })
@@ -59,6 +60,7 @@ module.exports = angular.module('spinnaker.core.account.service', [
       return listAccounts().then(function(accounts) {
         let allProviders = _.uniq(_.pluck(accounts, 'type'));
         let availableRegisteredProviders = _.intersection(allProviders, cloudProviderRegistry.listRegisteredProviders());
+         console.log('availableRegisteredProviders', availableRegisteredProviders, 'allProviders', allProviders, 'cloudProviderRegistry', cloudProviderRegistry.listRegisteredProviders() );
         if (application) {
           let appProviders = application.attributes.cloudProviders ?
             application.attributes.cloudProviders.split(',') :
