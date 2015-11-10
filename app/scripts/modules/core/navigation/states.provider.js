@@ -14,6 +14,22 @@ module.exports = angular.module('spinnaker.core.navigation.states.provider', [
   require('../projects/service/project.read.service.js'),
 ])
   .provider('states', function($stateProvider, $urlRouterProvider, stateHelperProvider, deliveryStates) {
+
+    // Used to put additional states into the home and application views; can add to more states as needed
+    let addedStates = {};
+    this.addStateConfig = function(config) {
+      if (!addedStates[config.parent]) {
+        addedStates[config.parent] = [];
+      }
+      addedStates[config.parent].push(config.state);
+    };
+
+    function augmentChildren(state) {
+      if (addedStates[state.name]) {
+        state.children = (state.children || []).concat(addedStates[state.name]);
+      }
+    }
+
     this.setStates = function() {
       $urlRouterProvider.otherwise('/');
       // Don't crash on trailing slashes
@@ -24,12 +40,6 @@ module.exports = angular.module('spinnaker.core.navigation.states.provider', [
       $urlRouterProvider.when('/', '/infrastructure');
       $urlRouterProvider.when('/projects/{project}', '/projects/{project}/dashboard');
       $urlRouterProvider.when('/projects/{project}/applications/{application}', '/projects/{project}/applications/{application}/clusters');
-
-      // Handle legacy links to old security groups path
-      $urlRouterProvider.when(
-        '/applications/{application}/connections{path:.*}',
-        '/applications/{application}/securityGroups'
-      );
 
       var instanceDetails = {
         name: 'instanceDetails',
@@ -45,6 +55,7 @@ module.exports = angular.module('spinnaker.core.navigation.states.provider', [
           }
         },
         resolve: {
+          overrides: () => { return {}; },
           instance: ['$stateParams', function($stateParams) {
             return {
               instanceId: $stateParams.instanceId
@@ -323,40 +334,6 @@ module.exports = angular.module('spinnaker.core.navigation.states.provider', [
         }
       };
 
-      var fastPropertyRollouts = {
-        name: 'rollouts',
-        url: '/rollouts',
-        views: {
-          'master': {
-            templateUrl: require('../../netflix/fastProperties/fastPropertyRollouts.html'),
-            controller: 'FastPropertyRolloutController',
-            controllerAs: 'rollout'
-          }
-        },
-        data: {
-          pageTitleSection: {
-            title: 'Fast Property Rollout'
-          }
-        }
-      };
-
-      var appFastProperties = {
-        name: 'properties',
-        url: '/properties',
-        views: {
-          'insight': {
-            templateUrl: require('../../netflix/fastProperties/applicationProperties.html'),
-            controller: 'ApplicationPropertiesController',
-            controllerAs: 'fp'
-          }
-        },
-        data: {
-          pageTitleSection: {
-            title: 'Fast Properties'
-          }
-        }
-      };
-
       function application(mainView, relativeUrl='') {
         let applicationConfig = {
           name: 'application',
@@ -366,9 +343,11 @@ module.exports = angular.module('spinnaker.core.navigation.states.provider', [
               return applicationReader.getApplication($stateParams.application, {tasks: true, executions: true, pipelineConfigs: true})
                 .then(
                 function(app) {
-                  return app;
+                  return app || { notFound: true, name: $stateParams.application };
                 },
-                function() { return {notFound: true, name: $stateParams.application}; }
+                function() {
+                  return { notFound: true, name: $stateParams.application };
+                }
               );
             }]
           },
@@ -387,9 +366,9 @@ module.exports = angular.module('spinnaker.core.navigation.states.provider', [
             deliveryStates.executions,
             deliveryStates.configure,
             config,
-            appFastProperties,
           ],
         };
+        augmentChildren(applicationConfig);
         applicationConfig.views = {};
         applicationConfig.views[mainView] = {
             templateUrl: require('../application/application.html'),
@@ -419,41 +398,6 @@ module.exports = angular.module('spinnaker.core.navigation.states.provider', [
         ],
       };
 
-      var fastProperties = {
-        name: 'properties',
-        url: '/properties',
-        reloadOnSearch: false,
-        views: {
-          'master': {
-            templateUrl: require('../../netflix/fastProperties/properties.html'),
-            controller: 'FastPropertiesController',
-            controllerAs: 'fp'
-          }
-        }
-      };
-
-      var data = {
-        name: 'data',
-        url: '/data',
-        reloadOnSearch: false,
-        views: {
-          'main@': {
-            templateUrl: require('../../netflix/fastProperties/main.html'),
-            controller: 'FastPropertyDataController',
-            controllerAs: 'data'
-          }
-        },
-        data: {
-          pageTitleMain: {
-            label: 'Data'
-          }
-        },
-        children: [
-          fastProperties,
-          fastPropertyRollouts,
-        ]
-      };
-
       var dashboard = {
         name: 'dashboard',
         url: '/dashboard',
@@ -470,27 +414,9 @@ module.exports = angular.module('spinnaker.core.navigation.states.provider', [
           }
         },
       };
-      //
-      //var configureProject = {
-      //  name: 'configureProject',
-      //  url: '/configure',
-      //  views: {
-      //    detail: {
-      //      templateUrl: require('../projects/configure/configure.html'),
-      //      controller: 'ConfigureProjectCtrl',
-      //      controllerAs: 'configureProjectCtrl',
-      //    }
-      //  },
-      //  data: {
-      //    pageTitleSection: {
-      //      title: 'Configure'
-      //    }
-      //  },
-      //};
 
       var project = {
         name: 'project',
-        //abstract: true,
         url: '/projects/{project}',
         resolve: {
           projectConfiguration: ['$stateParams', 'projectReader', function($stateParams, projectReader) {
@@ -517,7 +443,6 @@ module.exports = angular.module('spinnaker.core.navigation.states.provider', [
         },
         children: [
           dashboard,
-          //configureProject,
           application('detail', '/applications'),
         ]
       };
@@ -586,11 +511,12 @@ module.exports = angular.module('spinnaker.core.navigation.states.provider', [
         children: [
           applications,
           infrastructure,
-          data,
           project,
           standaloneInstance
         ],
       };
+
+      augmentChildren(home);
 
       stateHelperProvider.setNestedState(home);
 

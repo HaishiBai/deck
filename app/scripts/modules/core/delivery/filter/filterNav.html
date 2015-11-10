@@ -17,7 +17,7 @@
   </div>
   <div class="content">
 
-    <collapsible-section heading="View" expanded="true">
+    <collapsible-section heading="Pipelines" expanded="true">
       <div class="form"
            ng-model="vm.application.pipelineConfigs"
            ui-sortable="vm.pipelineSortOptions">
@@ -36,7 +36,7 @@
             </label>
           </div>
         </div>
-        <div>
+        <div ng-if="vm.pipelineNames.length">
           <a class="btn btn-xs btn-default" href
              ng-if="vm.viewState.pipelineReorderDisabled"
              ng-click="vm.enablePipelineReorder()">Reorder Pipelines</a>

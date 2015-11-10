@@ -15,6 +15,35 @@ module.exports = angular.module('spinnaker.serverGroup.configure.gce.configurati
                                                           gceInstanceTypeService, cacheInitializer,
                                                           $q, loadBalancerReader, networkReader, _) {
 
+    var persistentDiskTypes = [
+      'pd-standard',
+      'pd-ssd'
+    ];
+    var authScopes = [
+      'cloud-platform',
+      'userinfo.email',
+      'compute.readonly',
+      'compute',
+      'cloud.useraccounts.readonly',
+      'cloud.useraccounts',
+      'devstorage.read_only',
+      'devstorage.write_only',
+      'devstorage.full_control',
+      'taskqueue',
+      'bigquery',
+      'sqlservice.admin',
+      'datastore',
+      'logging.write',
+      'logging.read',
+      'logging.admin',
+      'monitoring.write',
+      'monitoring.read',
+      'monitoring',
+      'bigtable.data.readonly',
+      'bigtable.data',
+      'bigtable.admin',
+      'bigtable.admin.table',
+    ];
 
     function configureCommand(command) {
       command.image = command.viewState.imageId;
@@ -25,6 +54,8 @@ module.exports = angular.module('spinnaker.serverGroup.configure.gce.configurati
         loadBalancers: loadBalancerReader.listLoadBalancers('gce'),
         instanceTypes: gceInstanceTypeService.getAllTypesByRegion(),
         images: gceImageReader.findImages({provider: 'gce'}),
+        persistentDiskTypes: $q.when(angular.copy(persistentDiskTypes)),
+        authScopes: $q.when(angular.copy(authScopes)),
       }).then(function(backingData) {
         var loadBalancerReloader = $q.when(null);
         var securityGroupReloader = $q.when(null);
@@ -66,6 +97,7 @@ module.exports = angular.module('spinnaker.serverGroup.configure.gce.configurati
       var result = { dirty: {} };
       if (command.region) {
         var filtered = gceInstanceTypeService.getAvailableTypesForRegions(command.backingData.instanceTypes, [command.region]);
+        filtered = sortInstanceTypes(filtered);
         if (command.instanceType && filtered.indexOf(command.instanceType) === -1) {
           command.instanceType = null;
           result.dirty.instanceType = true;
@@ -75,6 +107,25 @@ module.exports = angular.module('spinnaker.serverGroup.configure.gce.configurati
         command.backingData.filtered.instanceTypes = [];
       }
       return result;
+    }
+
+    // n1-standard-8 should come before n1-standard-16, so we must sort by the individual segments of the names.
+    function sortInstanceTypes(instanceTypes) {
+      var tokenizedInstanceTypes = _.map(instanceTypes, instanceType => {
+        let tokens = instanceType.split('-');
+
+        return {
+          class: tokens[0],
+          group: tokens[1],
+          index: Number(tokens[2]) || 0
+        };
+      });
+
+      let sortedTokenizedInstanceTypes = _.sortByAll(tokenizedInstanceTypes, ['class', 'group', 'index']);
+
+      return _.map(sortedTokenizedInstanceTypes, sortedTokenizedInstanceType => {
+        return sortedTokenizedInstanceType.class + '-' + sortedTokenizedInstanceType.group + (sortedTokenizedInstanceType.index ? '-' + sortedTokenizedInstanceType.index : '');
+      });
     }
 
     function configureImages(command) {

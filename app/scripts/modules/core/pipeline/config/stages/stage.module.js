@@ -31,6 +31,7 @@ module.exports = angular.module('spinnaker.core.pipeline.config.stage', [
 
     var stageTypes = pipelineConfig.getConfigurableStageTypes(),
         lastStageScope;
+
     $scope.options = {
       stageTypes: _.sortBy(stageTypes, function (stageType) {
         return stageType.label;
@@ -44,13 +45,20 @@ module.exports = angular.module('spinnaker.core.pipeline.config.stage', [
       });
     });
 
+    if($scope.pipeline.strategy){
+      $scope.options.stageTypes = $scope.options.stageTypes.filter((stageType) => {
+            return stageType.strategy || false;
+      });
+    }
+
     function getConfig(type) {
       return pipelineConfig.getStageConfig({type: type});
     }
 
     $scope.groupDependencyOptions = function(stage) {
+      var requisiteStageRefIds = $scope.stage.requisiteStageRefIds || [];
       return stage.available ? 'Available' :
-        $scope.stage.requisiteStageRefIds.indexOf(stage.refId) === -1 ? 'Downstream dependencies (unavailable)' : null;
+        requisiteStageRefIds.indexOf(stage.refId) === -1 ? 'Downstream dependencies (unavailable)' : null;
     };
 
     $scope.updateAvailableDependencyStages = function() {
@@ -86,6 +94,10 @@ module.exports = angular.module('spinnaker.core.pipeline.config.stage', [
         $scope.viewState.stageIndex = $scope.pipeline.stages.length - 1;
       }
       $scope.stage = $scope.pipeline.stages[$scope.viewState.stageIndex];
+
+      if (!$scope.stage) {
+        return;
+      }
 
       if (!$scope.stage.type) {
         $scope.options.selectedStageType = null;

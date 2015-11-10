@@ -1,12 +1,12 @@
 <div ng-controller="gceFindAmiExecutionDetailsCtrl">
   <execution-details-section-nav sections="configSections"></execution-details-section-nav>
-  <div class="step-section-details" ng-if="detailsSection === 'findAMIConfig'">
+  <div class="step-section-details" ng-if="detailsSection === 'findImageConfig'">
     <div class="row">
       <div class="col-md-6">
         <dl class="dl-narrow dl-horizontal">
           <dt>Account</dt>
           <dd>
-            <account-tag account="stage.context.credentials"></account-tag>
+            <account-tag account="stage.context.credentials" provider="'aws'"></account-tag>
           </dd>
           <dt ng-if="stage.context.regions">Regions</dt>
           <dd ng-if="stage.context.regions">{{stage.context.regions.join(', ')}}</dd>

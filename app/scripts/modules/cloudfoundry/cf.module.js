@@ -2,6 +2,12 @@
 
 let angular = require('angular');
 
+// load all templates into the $templateCache
+var templates = require.context('./', true, /\.html$/);
+templates.keys().forEach(function(key) {
+    templates(key);
+});
+
 module.exports = angular.module('spinnaker.cf', [
     require('../core/cloudProvider/cloudProvider.registry.js'),
     require('../core/pipeline/config/stages/deploy/cf/cfDeployStage.js'),
@@ -12,6 +18,9 @@ module.exports = angular.module('spinnaker.cf', [
     require('./serverGroup/configure/serverGroup.configure.cf.module.js'),
     require('./serverGroup/serverGroup.transformer.js'),
     require('./loadBalancer/loadBalancer.transformer.js'),
+    require('./loadBalancer/details/LoadBalancerDetailsCtrl.js'),
+    require('./loadBalancer/configure/CreateLoadBalancerCtrl.js'),
+    require('./instance/details/instance.details.controller.js'),
     require('./securityGroup/details/SecurityGroupDetailsCtrl.js'),
     require('./securityGroup/securityGroup.transformer.js'),
     require('./securityGroup/securityGroup.reader.js'),
@@ -19,6 +28,7 @@ module.exports = angular.module('spinnaker.cf', [
 ])
     .config(function(cloudProviderRegistryProvider) {
         cloudProviderRegistryProvider.registerProvider('cf', {
+            name: 'Cloud Foundry',
             logo: {
                 path: require('./logo_cf.png'),
             },
@@ -39,15 +49,15 @@ module.exports = angular.module('spinnaker.cf', [
             },
             instance: {
                 instanceTypeService: 'cfInstanceTypeService',
-                //detailsTemplateUrl: require('./instance/details/instanceDetails.html'),
-                //detailsController: 'cfInstanceDetailsCtrl',
+                detailsTemplateUrl: require('./instance/details/instanceDetails.html'),
+                detailsController: 'cfInstanceDetailsCtrl',
             },
             loadBalancer: {
                 transformer: 'cfLoadBalancerTransformer',
-            //    detailsTemplateUrl: require('./loadBalancer/details/loadBalancerDetails.html'),
-            //    detailsController: 'cfLoadBalancerDetailsCtrl',
-            //    createLoadBalancerTemplateUrl: require('./loadBalancer/configure/createLoadBalancer.html'),
-            //    createLoadBalancerController: 'cfCreateLoadBalancerCtrl',
+                detailsTemplateUrl: require('./loadBalancer/details/loadBalancerDetails.html'),
+                detailsController: 'cfLoadBalancerDetailsCtrl',
+                createLoadBalancerTemplateUrl: require('./loadBalancer/configure/createLoadBalancer.html'),
+                createLoadBalancerController: 'cfCreateLoadBalancerCtrl',
             },
             securityGroup: {
                 transformer: 'cfSecurityGroupTransformer',

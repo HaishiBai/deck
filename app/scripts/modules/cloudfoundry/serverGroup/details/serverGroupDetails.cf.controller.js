@@ -5,20 +5,21 @@ let angular = require('angular');
 
 module.exports = angular.module('spinnaker.serverGroup.details.cf.controller', [
   require('angular-ui-router'),
-  //require('../configure/ServerGroupCommandBuilder.js'),
+  require('../configure/ServerGroupCommandBuilder.js'),
   require('../../../core/serverGroup/serverGroup.read.service.js'),
+  require('../../../core/serverGroup/details/serverGroupWarningMessage.service.js'),
   require('../../../core/confirmationModal/confirmationModal.service.js'),
   require('../../../core/serverGroup/serverGroup.write.service.js'),
   require('../../../core/serverGroup/configure/common/runningExecutions.service.js'),
   require('../../../core/utils/lodash.js'),
   require('../../../core/insight/insightFilterState.model.js'),
-  //require('./resize/resizeServerGroup.controller'),
+  require('./resize/resizeServerGroup.controller'),
   require('../../../core/modal/closeable/closeable.modal.controller.js'),
   require('../../../core/utils/selectOnDblClick.directive.js'),
 ])
     .controller('cfServerGroupDetailsCtrl', function ($scope, $state, $templateCache, $interpolate, app, serverGroup, InsightFilterStateModel,
-                                                       /*cfServerGroupCommandBuilder,*/ serverGroupReader, $uibModal, confirmationModalService, _, serverGroupWriter,
-                                                      runningExecutionsService) {
+                                                       cfServerGroupCommandBuilder, serverGroupReader, $uibModal, confirmationModalService, _, serverGroupWriter,
+                                                      runningExecutionsService, serverGroupWarningMessageService) {
 
       let application = app;
 
@@ -68,10 +69,11 @@ module.exports = angular.module('spinnaker.serverGroup.details.cf.controller', [
               }).compact().value();
             }
 
-            var pathSegments = $scope.serverGroup.launchConfig.instanceTemplate.selfLink.split('/');
-            var projectId = pathSegments[pathSegments.indexOf('projects') + 1];
-            $scope.serverGroup.logsLink =
-                'https://console.developers.google.com/project/' + projectId + '/logs?service=compute.googleapis.com&minLogLevel=0&filters=text:' + $scope.serverGroup.name;
+            //var pathSegments = $scope.serverGroup.launchConfig.instanceTemplate.selfLink.split('/');
+            //var projectId = pathSegments[pathSegments.indexOf('projects') + 1];
+
+            // TODO Add link to CF console outputs
+
           } else {
             autoClose();
           }
@@ -144,10 +146,9 @@ module.exports = angular.module('spinnaker.serverGroup.details.cf.controller', [
         });
       };
 
-      this.getBodyTemplate = function(serverGroup, application) {
-        if(this.isLastServerGroupInRegion(serverGroup, application)){
-          var template = $templateCache.get(require('../../../core/serverGroup/details/deleteLastServerGroupWarning.html'));
-          return $interpolate(template)({deletingServerGroup: serverGroup});
+      this.getBodyTemplate = (serverGroup, application) => {
+        if (this.isLastServerGroupInRegion(serverGroup, application)){
+          return serverGroupWarningMessageService.getMessage(serverGroup);
         }
       };
 
@@ -216,6 +217,17 @@ module.exports = angular.module('spinnaker.serverGroup.details.cf.controller', [
           submitMethod: submitMethod
         });
 
+      };
+
+      this.resizeServerGroup = function resizeServerGroup() {
+        $uibModal.open({
+          templateUrl: require('./resize/resizeServerGroup.html'),
+          controller: 'cfResizeServerGroupCtrl as ctrl',
+          resolve: {
+            serverGroup: function() { return $scope.serverGroup; },
+            application: function() { return application; }
+          }
+        });
       };
 
       this.showUserData = function showScalingActivities() {

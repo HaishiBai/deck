@@ -41,6 +41,7 @@ describe('Controller: pipelineExecutions', function () {
       name: 'foo',
       executionsLoaded: false,
       pipelineConfigsLoaded: false,
+      reloadExecutions: angular.noop,
     };
     spyOn(pipelineConfigService, 'getPipelinesForApplication').and.returnValue($q.when({ plain: function () {
       return [];
@@ -50,7 +51,7 @@ describe('Controller: pipelineExecutions', function () {
 
     expect(controller.viewState.loading).toBe(true);
 
-    rootScope.$broadcast('executions-loaded');
+    rootScope.$broadcast('executions-reloaded');
     rootScope.$broadcast('pipelineConfigs-loaded');
     scope.$digest();
     expect(controller.viewState.loading).toBe(false);
@@ -61,6 +62,7 @@ describe('Controller: pipelineExecutions', function () {
       name: 'foo',
       pipelineConfigsLoading: false,
       executionsLoaded: true,
+      reloadExecutions: angular.noop,
       pipelineConfigs: [
         {
           id: 'a1',
@@ -90,6 +92,7 @@ describe('Controller: pipelineExecutions', function () {
       ],
     };
     this.initializeController(application);
+    rootScope.$broadcast('executions-reloaded');
     scope.$digest();
 
     expect(application.executions[0].name).toBe('updated name');

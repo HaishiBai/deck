@@ -4,6 +4,12 @@ let angular = require('angular');
 
 require('./logo/gce.logo.less');
 
+// load all templates into the $templateCache
+var templates = require.context('./', true, /\.html$/);
+templates.keys().forEach(function(key) {
+  templates(key);
+});
+
 module.exports = angular.module('spinnaker.gce', [
   require('../core/cloudProvider/cloudProvider.registry.js'),
   require('./serverGroup/details/serverGroupDetails.gce.controller.js'),
@@ -16,9 +22,12 @@ module.exports = angular.module('spinnaker.gce', [
   require('../core/pipeline/config/stages/bake/gce/gceBakeStage.js'),
   require('../core/pipeline/config/stages/destroyAsg/gce/gceDestroyAsgStage.js'),
   require('../core/pipeline/config/stages/disableAsg/gce/gceDisableAsgStage.js'),
+  require('../core/pipeline/config/stages/disableCluster/gce/gceDisableClusterStage.js'),
   require('../core/pipeline/config/stages/enableAsg/gce/gceEnableAsgStage.js'),
   require('../core/pipeline/config/stages/findAmi/gce/gceFindAmiStage.js'),
   require('../core/pipeline/config/stages/resizeAsg/gce/gceResizeAsgStage.js'),
+  require('../core/pipeline/config/stages/scaleDownCluster/gce/gceScaleDownClusterStage.js'),
+  require('../core/pipeline/config/stages/shrinkCluster/gce/gceShrinkClusterStage.js'),
   require('./instance/gceInstanceTypeService.js'),
   require('./loadBalancer/loadBalancer.transformer.js'),
   require('./loadBalancer/details/LoadBalancerDetailsCtrl.js'),
@@ -34,6 +43,7 @@ module.exports = angular.module('spinnaker.gce', [
 ])
   .config(function(cloudProviderRegistryProvider) {
     cloudProviderRegistryProvider.registerProvider('gce', {
+      name: 'Google',
       logo: {
         path: require('./logo/gce.logo.png'),
       },

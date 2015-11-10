@@ -91,6 +91,10 @@ module.exports = angular.module('spinnaker.core.help.contents', [])
     'gce.instance.customMetadata.instance-template': 'The instance template used to configure this instance.',
     'gce.instance.customMetadata.load-balancer-names': 'This field is used to "remember" what load balancers this instance is associated with, even if it is deregistered.',
     'gce.instance.customMetadata.startup-script': 'This script will run automatically on every boot.',
+    'gce.instance.storage': '<p>Storage options can be fully-configured on the <b>Advanced Settings</b> tab. These are just default settings. Please be aware of your Local SSD quotas as you provision VMs.</p>',
+    'gce.instance.storage.localSSD': '<p>Local SSD disks are always 375GB. All non shared-core instance types support attaching up to 4 Local SSD disks. Please be aware of your Local SSD quotas as you provision VMs.</p>',
+    'gce.instance.authScopes': '<p>Service account scopes specify which Google Cloud Platform APIs your instances can authenticate with, and define the level of access that your instances have with those services.</p>',
+    'gce.instance.authScopes.cloud-platform': '<p>The instances in this server group have full API access to all Google Cloud services.</p>',
     'gce.instanceType.32core': '<p>32-core machine types are in Beta and are available only in Ivy Bridge and Haswell zones. Attempting to provision a 32-core machine in an unsupported zone will result in a <b>machine type not found</b> error message.</p>',
     'gce.loadBalancer.advancedSettings.healthInterval': '<p>Configures the interval, in seconds, between load balancer health checks.</p><p>Default: <b>10</b></p>',
     'gce.loadBalancer.advancedSettings.healthyThreshold': '<p>Configures the number of healthy observations before reinstituting an instance into the load balancer’s traffic rotation.</p><p>Default: <b>10</b></p>',
@@ -113,6 +117,12 @@ module.exports = angular.module('spinnaker.core.help.contents', [])
     'loadBalancer.advancedSettings.healthInterval': '<p>Configures the interval, in seconds, between ELB health checks.</p><p>Default: <b>10</b></p>',
     'loadBalancer.advancedSettings.healthyThreshold': '<p>Configures the number of healthy observations before reinstituting an instance into the ELB’s traffic rotation.</p><p>Default: <b>10</b></p>',
     'loadBalancer.advancedSettings.unhealthyThreshold': '<p>Configures the number of unhealthy observations before deservicing an instance from the ELB.</p><p>Default: <b>2</b></p>',
+    'pipeline.config.resizeAsg.action': '<p>Configures the resize action for the target server group.<ul>' +
+      '<li><b>Scale Up</b> increases the size of the target server group by an incremental or percentage amount</li>' +
+      '<li><b>Scale Down</b> decreases the size of the target server group by an incremental or percentage amount</li>' +
+      '<li><b>Scale to Cluster Size</b> increases the size of the target server group to match the largest server group in the cluster, optionally with an incremental or percentage additional capacity. Additional capacity will not exceed the existing maximum size.</li>' +
+      '<li><b>Scale to Exact Size</b> adjusts the size of the target server group to match the provided capacity</li>' +
+      '</ul></p>',
     'pipeline.config.resizeAsg.cluster': '<p>Configures the cluster upon which this resize operation will act. The <em>target</em> specifies what server group to resolve for the operation.</p>',
     'pipeline.config.modifyScalingProcess.cluster': '<p>Configures the cluster upon which this modify scaling process operation will act. The <em>target</em> specifies what server group to resolve for the operation.</p>',
     'pipeline.config.enableAsg.cluster': '<p>Configures the cluster upon which this enable operation will act. The <em>target</em> specifies what server group to resolve for the operation.</p>',
@@ -205,4 +215,5 @@ module.exports = angular.module('spinnaker.core.help.contents', [])
       'to only show load balancers with instances failing the health check for the load balancer.</p>',
     'project.cluster.stack': '<p>(Optional field)</p><p>Filters displayed clusters by stack.</p><p>Enter <samp>*</samp> to include all stacks; leave blank to omit any clusters with a stack.</p>',
     'project.cluster.detail': '<p>(Optional field)</p><p>Filters displayed clusters by detail.</p><p>Enter <samp>*</samp> to include all details; leave blank to omit any clusters with a detail.</p>',
+    'instanceType.unavailable': '<p>This instance type is not available for the selected configuration.</p>',
   }).name;

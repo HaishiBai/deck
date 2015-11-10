@@ -11,6 +11,7 @@ module.exports = angular.module('spinnaker.core.pipeline.stage.deployStage', [
     pipelineConfigProvider.registerStage({
       label: 'Deploy',
       description: 'Deploys the previously baked or found image',
+      strategyDescription: 'Deploys the image specified',
       key: 'deploy',
       templateUrl: require('./deployStage.html'),
       executionDetailsUrl: require('./deployExecutionDetails.html'),
@@ -24,6 +25,7 @@ module.exports = angular.module('spinnaker.core.pipeline.stage.deployStage', [
           message: 'You must have a Bake or Find Image stage before any deploy stage.'
         },
       ],
+      strategy: true,
     });
   })
   .controller('DeployStageCtrl', function ($scope, $uibModal, stage, namingService, providerSelectionService,
@@ -31,16 +33,7 @@ module.exports = angular.module('spinnaker.core.pipeline.stage.deployStage', [
     $scope.stage = stage;
 
     function initializeCommand() {
-      // TODO: We can probably remove this once we've migrated everyone over to multi-cluster deploy stages.
-      // This is the lazy way to get us there without explicitly editing all the existing pipelines
       $scope.stage.clusters = $scope.stage.clusters || [];
-      if ($scope.stage.cluster) {
-        $scope.stage.cluster.account = $scope.stage.account;
-        $scope.stage.clusters = [$scope.stage.cluster];
-
-        delete $scope.stage.cluster;
-        delete $scope.stage.account;
-      }
     }
 
     this.getRegion = function(cluster) {
@@ -89,7 +82,7 @@ module.exports = angular.module('spinnaker.core.pipeline.stage.deployStage', [
     };
 
     this.editCluster = function(cluster, index) {
-      cluster.provider = cluster.providerType || 'aws';
+      cluster.provider = cluster.cloudProvider || cluster.providerType || 'aws';
       let providerConfig = cloudProviderRegistry.getProvider(cluster.provider);
       return $uibModal.open({
         templateUrl: providerConfig.serverGroup.cloneServerGroupTemplateUrl,

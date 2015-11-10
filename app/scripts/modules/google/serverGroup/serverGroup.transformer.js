@@ -17,7 +17,10 @@ module.exports = angular
       var command = _.defaults({backingData: [], viewState: []}, base);
       if (base.viewState.mode !== 'clone') {
         delete command.source;
+      } else {
+        delete command.providerType;
       }
+      command.cloudProvider = 'gce';
       command.availabilityZones = {};
       command.availabilityZones[command.region] = [base.zone];
       command.account = command.credentials;
@@ -26,6 +29,9 @@ module.exports = angular
       delete command.backingData;
       delete command.selectedProvider;
       delete command.implicitSecurityGroups;
+      delete command.persistentDiskType;
+      delete command.persistentDiskSizeGb;
+      delete command.localSSDCount;
 
       return command;
     }

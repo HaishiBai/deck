@@ -17,7 +17,7 @@ module.exports = angular.module('spinnaker.instance.detail.aws.controller', [
 ])
   .controller('awsInstanceDetailsCtrl', function ($scope, $state, $uibModal, InsightFilterStateModel, settings,
                                                instanceWriter, confirmationModalService, recentHistoryService,
-                                               instanceReader, _, instance, app, $q) {
+                                               instanceReader, _, instance, app, $q, overrides) {
 
     // needed for standalone instances
     $scope.detailsTemplateUrl = require('./instanceDetails.html');
@@ -129,13 +129,11 @@ module.exports = angular.module('spinnaker.instance.detail.aws.controller', [
           $scope.instance.region = region;
           $scope.instance.vpcId = vpcId;
           $scope.instance.loadBalancers = loadBalancers;
-          var discoveryMetric = _.find($scope.healthMetrics, function(metric){ return metric.type === 'Discovery'; });
-          if( discoveryMetric && discoveryMetric.vipAddress) {
-            var vipList = discoveryMetric.vipAddress;
-            let vipAddress = vipList.contains(',') ? vipList.split(',') : [vipList];
-            $scope.instance.vipAddress = _.uniq(vipAddress);
-          }
+
           $scope.baseIpAddress = details.publicDnsName || details.privateIpAddress;
+          if (overrides.instanceDetailsLoaded) {
+            overrides.instanceDetailsLoaded();
+          }
         },
           autoClose
         );
@@ -355,17 +353,6 @@ module.exports = angular.module('spinnaker.instance.detail.aws.controller', [
       });
     };
 
-    this.showConsoleOutput = function  () {
-      $uibModal.open({
-        templateUrl: require('../../../core/instance/details/console/consoleOutput.modal.html'),
-        controller: 'ConsoleOutputCtrl as ctrl',
-        size: 'lg',
-        resolve: {
-          instance: function() { return $scope.instance; },
-        }
-      });
-    };
-
     this.hasHealthState = function hasHealthState(healthProviderType, state) {
       var instance = $scope.instance;
       return (instance.health.some(function (health) {
@@ -375,12 +362,6 @@ module.exports = angular.module('spinnaker.instance.detail.aws.controller', [
     };
 
     retrieveInstance().then(() => app.registerAutoRefreshHandler(retrieveInstance, $scope));
-
-
-    this.getBastionAddressForAccount = function(account) {
-      let accountBastions = settings.providers.aws.accountBastions || {};
-      return accountBastions[account] || 'unknown';
-    };
 
     $scope.account = instance.account;
 
