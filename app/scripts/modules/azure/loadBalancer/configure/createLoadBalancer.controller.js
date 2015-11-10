@@ -331,9 +331,10 @@ module.exports = angular.module('spinnaker.loadBalancer.azure.create.controller'
       $scope.taskMonitor.submit(
         function() {
           let params = { cloudProvider: 'azure', providerType: 'azure', appName: application.name, clusterName: $scope.loadBalancer.clusterName,
-		 resourceGroupName: $scope.loadBalancer.clusterName,
-		 loadBalancerName: $scope.loadBalancer.name };
-            return loadBalancerWriter.upsertLoadBalancer($scope.loadBalancer, application, descriptor, params);
+            resourceGroupName: $scope.loadBalancer.clusterName,
+            loadBalancerName: $scope.loadBalancer.name
+          };
+          return loadBalancerWriter.upsertLoadBalancer($scope.loadBalancer, application, descriptor, params);
         }
       );
     };
