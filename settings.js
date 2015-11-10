@@ -18,23 +18,25 @@ window.spinnakerSettings = {
   providers: {
     azure: {
       defaults: {
-        account: 'test',
-        region: 'usw'
+        account: 'azure-test',
+        region: 'West US'
       },
-      primaryAccounts: ['test'],
-      primaryRegions: ['usw', 'use', 'euw', 'eue'],
+      primaryAccounts: ['azure-test'],
+      primaryRegions: ['West US', 'East US', 'Central US', 'North Central US', 'South Central US'],
       preferredZonesByAccount: {
 	test: {
-           'usw': ['usw'],
-           'use': ['use'],
-           'euw': ['euw'],
-           'eue': ['eue']
+           'West US': ['West US'],
+           'East US': ['East US'],
+           'Central US': ['Central US'],
+           'North Central US': ['North Central US'],
+           'South Central US': ['South Central US']
         },
 	default: {
-           'usw': ['usw'],
-           'use': ['use'],
-           'euw': ['euw'],
-           'eue': ['eue']
+           'West US': ['West US'],
+           'East US': ['East US'],
+           'Central US': ['Central US'],
+           'North Central US': ['North Central US'],
+           'South Central US': ['South Central US']
 	}
      }
     },
