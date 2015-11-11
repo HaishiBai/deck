@@ -8,8 +8,9 @@ module.exports = angular
     require('./fastProperty.write.service.js'),
     require('./fastPropertyTransformer.service.js'),
     require('../../core/utils/lodash.js'),
+    require('./fastPropertyScope.service.js'),
   ])
-  .controller('FastPropertyRolloutController', function ($scope, fastPropertyReader, fastPropertyWriter, fastPropertyTransformer, _) {
+  .controller('FastPropertyRolloutController', function ($scope, fastPropertyReader, fastPropertyWriter, fastPropertyTransformer, _, FastPropertyScopeService) {
     var vm = this;
 
     vm.applicationFilter = '';
@@ -33,9 +34,12 @@ module.exports = angular
       window.alert('Stop with: ' + promotionId);
     };
 
+    vm.extractScopeFromHistoryMessage = FastPropertyScopeService.extractScopeFromHistoryMessage;
+
     vm.getLastMessage = function(promotion) {
-      return _(promotion.history).last().message;
+      return FastPropertyScopeService.extractScopeFromHistoryMessage( _(promotion.history).last().message);
     };
+
 
     vm.updateStateFilter = function(state) {
       if(state) {
@@ -48,9 +52,9 @@ module.exports = angular
     };
 
     vm.loadPromotions = function loadPromotions() {
-      console.log('loading promotions');
       fastPropertyReader.loadPromotions()
         .then(function(promotionList) {
+          console.info("promotions list", promotionList);
           vm.promotions = vm.filteredPromotions = promotionList;
           vm.filter();
           return vm.promotions;
