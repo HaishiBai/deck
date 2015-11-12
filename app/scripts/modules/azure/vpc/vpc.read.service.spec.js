@@ -1,6 +1,6 @@
 'use strict';
 
-describe('vpcReader', function() {
+describe('vpcAzureReader', function() {
 
   var service, $http, $scope;
 
@@ -10,8 +10,8 @@ describe('vpcReader', function() {
     )
   );
 
-  beforeEach(window.inject(function ($httpBackend, $rootScope, _vpcReader_) {
-    service = _vpcReader_;
+  beforeEach(window.inject(function ($httpBackend, $rootScope, _vpcAzureReader_) {
+    service = _vpcAzureReader_;
     $http = $httpBackend;
     $scope = $rootScope.$new();
   }));
@@ -29,7 +29,7 @@ describe('vpcReader', function() {
 
     var result = null;
 
-    service.listVpcs().then(function(vpcs) { result = vpcs; });
+    service.listAzureVpcs().then(function(vpcs) { result = vpcs; });
 
     $http.flush();
     $scope.$digest();
@@ -46,21 +46,21 @@ describe('vpcReader', function() {
 
     var result = null;
 
-    service.getVpcName('vpc-1').then(function(name) { result = name; });
+    service.getAzureVpcName('vpc-1').then(function(name) { result = name; });
 
     $http.flush();
     $scope.$digest();
 
     expect(result).toBe('vpc1');
 
-    service.getVpcName('vpc-2').then(function(name) { result = name; });
+    service.getAzureVpcName('vpc-2').then(function(name) { result = name; });
 
     $http.flush();
     $scope.$digest();
 
     expect(result).toBe('vpc2');
 
-    service.getVpcName('vpc-4').then(function(name) { result = name; });
+    service.getAzureVpcName('vpc-4').then(function(name) { result = name; });
 
     $http.flush();
     $scope.$digest();

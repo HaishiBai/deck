@@ -23,7 +23,7 @@ module.exports = angular
                                                              accountService,
                                                              modalWizardService,
                                                              cacheInitializer,
-                                                             vpcReader,
+                                                             vpcAzureReader,
                                                              _ ) {
 
 
@@ -107,7 +107,7 @@ module.exports = angular
 
     ctrl.regionUpdated = function() {
       var account = $scope.securityGroup.credentials || $scope.securityGroup.accountName;
-      vpcReader.listVpcs().then(function(vpcs) {
+      vpcAzureReader.listAzureVpcs().then(function(vpcs) {
         var vpcsByName = _.groupBy(vpcs, 'label');
         $scope.allVpcs = vpcs;
         var available = [];

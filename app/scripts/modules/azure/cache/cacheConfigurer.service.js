@@ -13,7 +13,7 @@ module.exports = angular.module('spinnaker.azure.cache.initializer', [
 ])
   .factory('azureCacheConfigurer', function ($q,
                                          accountService, instanceTypeService, securityGroupReader,
-                                         subnetReader, vpcReader, keyPairsReader, loadBalancerReader) {
+                                         subnetReader, vpcAzureReader, keyPairsReader, loadBalancerReader) {
 
     let config = Object.create(null);
 
@@ -36,7 +36,7 @@ module.exports = angular.module('spinnaker.azure.cache.initializer', [
 
     config.vpcs = {
       version: 2,
-      initializers: [vpcReader.listVpcs],
+      initializers: [vpcAzureReader.listAzureVpcs],
     };
 
     config.keyPairs = {

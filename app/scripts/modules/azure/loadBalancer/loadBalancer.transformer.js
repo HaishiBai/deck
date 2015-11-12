@@ -6,7 +6,7 @@ module.exports = angular.module('spinnaker.azure.loadBalancer.transformer', [
   require('../../core/utils/lodash.js'),
   require('../vpc/vpc.read.service.js'),
 ])
-  .factory('azureLoadBalancerTransformer', function (settings, _, vpcReader) {
+  .factory('azureLoadBalancerTransformer', function (settings, _, vpcAzureReader) {
 
     function updateHealthCounts(container) {
       var instances = container.instances;
@@ -71,7 +71,7 @@ module.exports = angular.module('spinnaker.azure.loadBalancer.transformer', [
       loadBalancer.instances = _(activeServerGroups).pluck('instances').flatten().valueOf();
       loadBalancer.detachedInstances = _(activeServerGroups).pluck('detachedInstances').flatten().valueOf();
       updateHealthCounts(loadBalancer);
-      return vpcReader.listVpcs().then(addVpcNameToLoadBalancer(loadBalancer));
+      return vpcAzureReader.listAzureVpcs().then(addVpcNameToLoadBalancer(loadBalancer));
     }
 
     function serverGroupIsInLoadBalancer(serverGroup, loadBalancer) {

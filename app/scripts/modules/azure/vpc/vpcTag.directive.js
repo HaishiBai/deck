@@ -2,11 +2,11 @@
 
 let angular = require('angular');
 
-module.exports =  angular.module('spinnaker.vpc.tag.directive', [
+module.exports =  angular.module('spinnaker.azure.vpc.tag.directive', [
   require('./vpc.read.service.js'),
   require('../../core/utils/lodash.js'),
 ])
-  .directive('vpcTag', function(vpcReader, _) {
+  .directive('vpcAzureTag', function(vpcAzureReader, _) {
     return {
       restrict: 'E',
       scope: {
@@ -18,7 +18,7 @@ module.exports =  angular.module('spinnaker.vpc.tag.directive', [
           if (!scope.vpcId) {
             scope.vpcLabel = 'None (EC2 Classic)';
           } else {
-            vpcReader.getVpcName(scope.vpcId).then(function (name) {
+            vpcAzureReader.getAzureVpcName(scope.vpcId).then(function (name) {
               scope.vpcLabel = '(' + scope.vpcId + ')';
 
               if (name) {

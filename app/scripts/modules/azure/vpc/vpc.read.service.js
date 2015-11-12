@@ -4,14 +4,14 @@
 let angular = require('angular');
 
 module.exports = angular
-  .module('spinnaker.vpc.read.service', [
+  .module('spinnaker.azure.vpc.read.service', [
     require('exports?"restangular"!imports?_=lodash!restangular'),
     require('../../core/utils/lodash.js'),
     require('../../core/cache/infrastructureCaches.js')
   ])
-  .factory('vpcReader', function ($q, Restangular, infrastructureCaches ) {
+  .factory('vpcAzureReader', function ($q, Restangular, infrastructureCaches ) {
 
-    function listVpcs() {
+    function listAzureVpcs() {
       return Restangular.all('vpcs')
         .withHttpConfig({cache: infrastructureCaches.vpcs})
         .getList()
@@ -27,8 +27,8 @@ module.exports = angular
         });
     }
 
-    function getVpcName(id) {
-      return listVpcs().then(function(vpcs) {
+    function getAzureVpcName(id) {
+      return listAzureVpcs().then(function(vpcs) {
         var matches = vpcs.filter(function(test) {
           return test.id === id;
         });
@@ -37,8 +37,8 @@ module.exports = angular
     }
 
     return {
-      listVpcs: listVpcs,
-      getVpcName: getVpcName,
+      listAzureVpcs: listAzureVpcs,
+      getAzureVpcName: getAzureVpcName,
     };
 
   }).name;

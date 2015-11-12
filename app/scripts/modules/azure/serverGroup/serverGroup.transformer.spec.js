@@ -3,7 +3,7 @@
 describe('azureServerGroupTransformer', function () {
   const angular = require('angular');
 
-  var transformer, vpcReader, $q, $scope;
+  var transformer, vpcAzureReader, $q, $scope;
 
   beforeEach(
     window.module(
@@ -12,9 +12,9 @@ describe('azureServerGroupTransformer', function () {
   );
 
   beforeEach(function () {
-    window.inject(function (_azureServerGroupTransformer_, _vpcReader_, _$q_, $rootScope) {
+    window.inject(function (_azureServerGroupTransformer_, _vpcAzureReader_, _$q_, $rootScope) {
       transformer = _azureServerGroupTransformer_;
-      vpcReader = _vpcReader_;
+      vpcAzureReader = _vpcAzureReader_;
       $q = _$q_;
       $scope = $rootScope.$new();
     });
@@ -22,7 +22,7 @@ describe('azureServerGroupTransformer', function () {
 
   describe('normalize server group', function () {
     beforeEach(function() {
-      spyOn(vpcReader, 'listVpcs').and.returnValue($q.when([
+      spyOn(vpcAzureReader, 'listAzureVpcs').and.returnValue($q.when([
         {account: 'test', region: 'us-east-1', id: 'vpc-1', name: 'main'}
       ]));
     });

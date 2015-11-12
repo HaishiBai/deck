@@ -6,11 +6,11 @@ module.exports = angular.module('spinnaker.azure.serverGroup.transformer', [
     require('../../core/utils/lodash.js'),
     require('../vpc/vpc.read.service.js'),
   ])
-  .factory('azureServerGroupTransformer', function (_, vpcReader) {
+  .factory('azureServerGroupTransformer', function (_, vpcAzureReader) {
 
     function normalizeServerGroup(serverGroup) {
       serverGroup.instances.forEach((instance) => { instance.vpcId = serverGroup.vpcId; });
-      return vpcReader.listVpcs().then(addVpcNameToServerGroup(serverGroup));
+      return vpcAzureReader.listAzureVpcs().then(addVpcNameToServerGroup(serverGroup));
     }
 
     function addVpcNameToServerGroup(serverGroup) {

@@ -14,7 +14,7 @@
 // 
 //     // Initialize the controller and a mock scope
 //     beforeEach(window.inject(function ($controller, $rootScope, $q, accountService, securityGroupReader, modalWizardService,
-//                                 taskMonitorService, securityGroupWriter, vpcReader) {
+//                                 taskMonitorService, securityGroupWriter, vpcAzureReader) {
 // 
 //       this.$scope = $rootScope.$new();
 //       this.$q = $q;
@@ -23,7 +23,7 @@
 //       this.modalWizardService = modalWizardService;
 //       this.taskMonitorService = taskMonitorService;
 //       this.securityGroupWriter = securityGroupWriter;
-//       this.vpcReader = vpcReader;
+//       this.vpcAzureReader = vpcAzureReader;
 // 
 //       spyOn(this.accountService, 'listAccounts').and.returnValue(
 //         $q.when(['prod', 'test'])
@@ -33,7 +33,7 @@
 //         $q.when(['us-east-1', 'us-west-1'])
 //       );
 // 
-//       spyOn(this.vpcReader, 'listVpcs').and.returnValue(
+//       spyOn(this.vpcAzureReader, 'listAzureVpcs').and.returnValue(
 //         $q.when([
 //           { id: 'vpc1-pe', name: 'vpc 1', account: 'prod', region: 'us-east-1', deprecated: false, label: 'vpc 1' },
 //           { id: 'vpc2-pw', name: 'vpc 2', account: 'prod', region: 'us-west-1', deprecated: false, label: 'vpc 2' },
@@ -88,7 +88,7 @@
 //           modalWizardService: this.modalWizardService,
 //           taskMonitorService: this.taskMonitorService,
 //           securityGroupWriter: this.securityGroupWriter,
-//           vpcReader: this.vpcReader,
+//           vpcAzureReader: this.vpcAzureReader,
 //           application: {},
 //           securityGroup: { regions: [], securityGroupIngress: [] },
 //         });
