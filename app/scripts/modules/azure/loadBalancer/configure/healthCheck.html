@@ -37,7 +37,7 @@
 
       <div class="col-md-8 nest">
 
-        <div class="form-group">
+        <div class="form-group" style="display:none">
           <div class="col-md-6 sm-label-left">
             <b>Timeout</b><help-field key="loadBalancer.advancedSettings.healthTimeout"/>
           </div>
@@ -48,14 +48,14 @@
 
         <div class="form-group">
           <div class="col-md-6 sm-label-left">
-            <b>Interval</b><help-field key="loadBalancer.advancedSettings.healthInterval"/>
+            <b>Interval</b><help-field key="azure.loadBalancer.advancedSettings.healthInterval"/>
           </div>
           <div class="col-md-4">
             <input class="form-control input-sm" type="number" min="0" ng-model="loadBalancer.healthInterval"/>
           </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" style="display:none">
           <div class="col-md-6 sm-label-left">
             <b>Healthy Threshold</b><help-field key="loadBalancer.advancedSettings.healthyThreshold"/>
           </div>
@@ -66,7 +66,7 @@
 
         <div class="form-group">
           <div class="col-md-6 sm-label-left">
-            <b>Unhealthy Threshold</b><help-field key="loadBalancer.advancedSettings.unhealthyThreshold"/>
+            <b>Unhealthy Threshold</b><help-field key="azure.loadBalancer.advancedSettings.unhealthyThreshold"/>
           </div>
           <div class="col-md-4">
             <input class="form-control input-sm" type="number" min="0" ng-model="loadBalancer.unhealthyThreshold"/>

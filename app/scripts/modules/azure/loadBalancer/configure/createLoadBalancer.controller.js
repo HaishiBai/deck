@@ -48,7 +48,7 @@ module.exports = angular.module('spinnaker.loadBalancer.azure.create.controller'
     $scope.taskMonitor = taskMonitorService.buildTaskMonitor({
       application: application,
       title: (isNew ? 'Creating ' : 'Updating ') + 'your load balancer',
-      forceRefreshMessage: 'Getting your new load balancer from Amazon...',
+      forceRefreshMessage: 'Getting your new load balancer from Azure...',
       modalInstance: $modalInstance,
       forceRefreshEnabled: true
     });
