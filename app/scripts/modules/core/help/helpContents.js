@@ -115,7 +115,7 @@ module.exports = angular.module('spinnaker.core.help.contents', [])
 
      'azure.loadBalancer.advancedSettings.healthInterval': '<p>Gets or sets the interval, in seconds, for how frequently to probe the endpoint for health status. Typically, the interval is slightly less than half the allocated timeout period (in seconds) which allows two full probes before taking the instance out of rotation.</p><p>Default: <b>The default value is 15, the minimum value is 5.</b></p>',
      'azure.loadBalancer.advancedSettings.unhealthyThreshold': '<p>Gets or sets the number of probes where if no response, will result in stopping further traffic from being delivered to the endpoint. This values allows endponints to be taken out of rotation faster or slower than the typical times used in Azure.</p><p>Default: <b>2</b></p>',
-      
+
     'loadBalancer.advancedSettings.healthTimeout': '<p>Configures the timeout, in seconds, for reaching the healthCheck target.</p><p> Default: <b>5</b></p>',
     'loadBalancer.advancedSettings.healthInterval': '<p>Configures the interval, in seconds, between ELB health checks.</p><p>Default: <b>10</b></p>',
     'loadBalancer.advancedSettings.healthyThreshold': '<p>Configures the number of healthy observations before reinstituting an instance into the ELB’s traffic rotation.</p><p>Default: <b>10</b></p>',
