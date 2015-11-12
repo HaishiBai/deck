@@ -2,7 +2,7 @@
 
 let angular = require('angular');
 
-module.exports = angular.module('spinnaker.amazon.serverGroup.details.resize.controller', [
+module.exports = angular.module('spinnaker.azure.serverGroup.details.resize.controller', [
   require('../../../../core/account/account.service.js'),
   require('../../../../core/serverGroup/serverGroup.write.service.js'),
   require('../../../../core/task/monitor/taskMonitorService.js')
