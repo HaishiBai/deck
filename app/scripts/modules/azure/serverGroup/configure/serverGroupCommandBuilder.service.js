@@ -5,7 +5,7 @@ let angular = require('angular');
 module.exports = angular.module('spinnaker.azure.serverGroupCommandBuilder.service', [
   require('exports?"restangular"!imports?_=lodash!restangular'),
   require('../../../core/account/account.service.js'),
-  require('../../../core/diff/diff.service.js'),
+  require('../../../netflix/serverGroup/diff/diff.service.js'),
   require('../../subnet/subnet.read.service.js'),
   require('../../../core/instance/instanceTypeService.js'),
   require('../../../core/naming/naming.service.js'),
